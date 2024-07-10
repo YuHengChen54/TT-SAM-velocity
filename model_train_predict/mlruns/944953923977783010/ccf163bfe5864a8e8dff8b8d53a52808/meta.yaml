@@ -1,0 +1,15 @@
+artifact_uri: file:///c:/Users/ASUS/Desktop/TT-SAM/TEAM_Taiwan-master/model_train_predict/mlruns/944953923977783010/ccf163bfe5864a8e8dff8b8d53a52808/artifacts
+end_time: 1718007956962
+entry_point_name: ''
+experiment_id: '944953923977783010'
+lifecycle_stage: active
+run_id: ccf163bfe5864a8e8dff8b8d53a52808
+run_name: test 0610 01
+run_uuid: ccf163bfe5864a8e8dff8b8d53a52808
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1718007671946
+status: 3
+tags: []
+user_id: ASUS
