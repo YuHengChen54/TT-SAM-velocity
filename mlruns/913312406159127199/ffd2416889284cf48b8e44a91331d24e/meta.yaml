@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/913312406159127199/ffd2416889284cf48b8e44a91331d24e/artifacts
+end_time: 1720657904251
+entry_point_name: ''
+experiment_id: '913312406159127199'
+lifecycle_stage: active
+run_id: ffd2416889284cf48b8e44a91331d24e
+run_name: 0710 model 12
+run_uuid: ffd2416889284cf48b8e44a91331d24e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1720629015779
+status: 3
+tags: []
+user_id: ASUS

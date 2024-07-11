@@ -4,8 +4,8 @@ import os
 from analysis import Intensity_Plotter,Warning_Time_Plotter
 
 
-model_num = 9
-mask_after_sec = 10 
+model_num = 12
+mask_after_sec = 7 
 label_type = "pgv"
 if label_type == "pga":
     label_threshold = np.log10(0.25)
@@ -29,7 +29,7 @@ prediction_with_info = pd.read_csv(
 )
 
 # for EQ_ID in catalog.query("year==2016 & magnitude>=5.5")["EQ_ID"]:
-for EQ_ID in [24904]:
+for EQ_ID in [25900]:
     event = catalog[catalog["EQ_ID"] == EQ_ID]
     event = event.assign(
         latitude=event["lat"] + event["lat_minute"] / 60,
