@@ -222,7 +222,7 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 9
+    model_index = 11
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
@@ -276,7 +276,7 @@ if __name__ == "__main__":
                     mask_waveform_random=True,
                     mag_threshold=0,
                     label_key="pgv",
-                    input_type="vel_lowfreq",
+                    input_type="vel",
                     data_length_sec=15,
                     station_blind=True,
                     bias_to_closer_station=True,
@@ -286,6 +286,6 @@ if __name__ == "__main__":
                     full_data,
                     optimizer,
                     hyper_param,
-                    experiment_name="TT-SAM initial test",
-                    run_name="test 0708 lowfreq",
+                    experiment_name="TT-SAM Vel+lowfreq",
+                    run_name="0710 model 12",
                 )
