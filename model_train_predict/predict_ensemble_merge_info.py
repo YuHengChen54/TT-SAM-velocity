@@ -20,7 +20,7 @@ from model.CNN_Transformer_Mixtureoutput_TEAM import (
 from data.multiple_sta_dataset import multiple_station_dataset
 from model_performance_analysis.analysis import Intensity_Plotter
 
-for mask_sec in [3,5,7,10]:
+for mask_sec in [3,5,7,10,13,15]:
     mask_after_sec = mask_sec
     label = "pgv"
     data = multiple_station_dataset(
@@ -31,16 +31,16 @@ for mask_sec in [3,5,7,10]:
         label_key=label,
         mag_threshold=0,
         input_type="vel",
-        data_length_sec=15,
+        data_length_sec=20,
     )
     # ===========predict==============
     device = torch.device("cuda")
-    for num in [12]:
+    for num in [13]:
         path = f"../model/model{num}_vel.pt"
         # path = "../model/model12_checkpoints/epoch70_model.pt"
         emb_dim = 150
         mlp_dims = (150, 100, 50, 30, 10)
-        CNN_model = CNN(mlp_input=5665).cuda()
+        CNN_model = CNN(mlp_input=7665).cuda()
         pos_emb_model = PositionEmbedding_Vs30(emb_dim=emb_dim).cuda()
         transformer_model = TransformerEncoder()
         mlp_model = MLP(input_shape=(emb_dim,), dims=mlp_dims).cuda()
@@ -52,7 +52,7 @@ for mask_sec in [3,5,7,10]:
             mlp_model,
             mdn_model,
             pga_targets=25,
-            data_length=3000,
+            data_length=4000,
         ).to(device)
         full_Model.load_state_dict(torch.load(path))
         loader = DataLoader(dataset=data, batch_size=1)
@@ -143,7 +143,7 @@ for mask_sec in [3,5,7,10]:
         fig.savefig(f"../predict/model {num} {mask_after_sec} sec_vel.png")
 
     # ===========merge info==============
-    num = 12
+    num = 13
     Afile_path = "../data"
     output_path = "../predict"
     catalog = pd.read_csv(f"{Afile_path}/1999_2019_final_catalog.csv")

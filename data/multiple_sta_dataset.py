@@ -342,32 +342,24 @@ class multiple_station_dataset(Dataset):
             labels_time = []
             P_picks = []
             for eventID in specific_index[0]:  # trace waveform
-
                 waveform = f["data"][str(eventID[0])][f"{self.input_type}_traces"][
                     eventID[1]
                 ][: (self.data_length_sec * self.sampling_rate), :]
-
-                waveform_lowfreq = f["data"][str(eventID[0])][f"{self.input_type}_lowfreq_traces"][
-                    eventID[1]
-                ][: (self.data_length_sec * self.sampling_rate), :]
-
-                waveform_concat = np.append(waveform, waveform_lowfreq, axis=1)
-
                 station_location = f["data"][str(eventID[0])]["station_location"][
                     eventID[1]
                 ]
                 Vs30 = f["data"][str(eventID[0])]["Vs30"][eventID[1]]
                 station_location = np.append(station_location, Vs30)
-                waveform_concat = np.pad(
-                    waveform_concat,
+                waveform = np.pad(
+                    waveform,
                     (
-                        (0, self.data_length_sec * self.sampling_rate - len(waveform_concat)),
+                        (0, self.data_length_sec * self.sampling_rate - len(waveform)),
                         (0, 0),
                     ),
                     "constant",
                 )
                 p_pick = f["data"][str(eventID[0])]["p_picks"][eventID[1]]
-                specific_waveforms.append(waveform_concat)
+                specific_waveforms.append(waveform)
                 # print(f"first {waveform.shape}")
                 stations_location.append(station_location)
                 seen_P_picks.append(p_pick)
@@ -395,7 +387,7 @@ class multiple_station_dataset(Dataset):
                     self.max_station_num - len(stations_location)
                 ):
                     # print(f"second {waveform.shape}")
-                    specific_waveforms.append(np.zeros_like(waveform_concat))
+                    specific_waveforms.append(np.zeros_like(waveform))
                     stations_location.append(np.zeros_like(station_location))
             # print("================")
             if (
@@ -408,7 +400,7 @@ class multiple_station_dataset(Dataset):
                     labels.append(np.zeros_like(label))
             Specific_waveforms = np.array(specific_waveforms)
             if self.mask_waveform_random:
-                random_mask_sec = np.random.randint(self.mask_waveform_sec, 10)
+                random_mask_sec = np.random.randint(self.mask_waveform_sec, 15)
                 Specific_waveforms[
                     :, seen_P_picks[0] + (random_mask_sec * self.sampling_rate) :, :
                 ] = 0

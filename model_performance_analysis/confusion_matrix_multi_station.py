@@ -5,8 +5,8 @@ from sklearn.metrics import confusion_matrix
 import os
 from analysis import Precision_Recall_Factory
 
-model_num = 1 
-path = "../predict"
+model_num = 13
+path = f"../predict/model_{model_num}_analysis"
 output_path = f"{path}/model_{model_num}_analysis"
 if not os.path.isdir(output_path):
     os.mkdir(output_path)
@@ -33,7 +33,7 @@ intensity_score_dict = {"second": [], "intensity_score": []}
 f1_curve_fig, f1_curve_ax = plt.subplots()
 precision_curve_fig, precision_curve_ax = plt.subplots()
 recall_curve_fig, recall_curve_ax = plt.subplots()
-for mask_after_sec in [3, 5, 7, 10]:
+for mask_after_sec in [3, 5, 7, 10, 15]:
     data = pd.read_csv(f"{path}/{mask_after_sec} sec model{model_num} with all info_vel.csv")
 
     predict_label = data["predict"]
