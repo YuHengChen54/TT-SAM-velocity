@@ -18,7 +18,7 @@ ax.hist(
     label=["test","train"],
 )
 ax.legend(loc='best')
-ax.set_yscale("log")
+ax.set_yscale("log")    
 label = ["1", "2", "3", "4", "5-", "5+", "6-", "6+", "7"]
 pga_threshold = np.log10(
     [0.025, 0.080, 0.250, 0.80, 1.4, 2.5, 4.4, 8.0,10])

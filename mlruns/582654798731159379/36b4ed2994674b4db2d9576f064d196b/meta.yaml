@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/582654798731159379/36b4ed2994674b4db2d9576f064d196b/artifacts
+end_time: 1720841566410
+entry_point_name: ''
+experiment_id: '582654798731159379'
+lifecycle_stage: active
+run_id: 36b4ed2994674b4db2d9576f064d196b
+run_name: 0712 model 14
+run_uuid: 36b4ed2994674b4db2d9576f064d196b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1720824550691
+status: 3
+tags: []
+user_id: ASUS

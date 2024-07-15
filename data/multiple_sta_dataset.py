@@ -113,6 +113,17 @@ class multiple_station_dataset(Dataset):
         event_metadata = init_event_metadata[
             init_event_metadata["magnitude"] >= mag_threshold
         ]
+
+        event_filter = []
+        for eq_id in event_metadata["EQ_ID"]:
+            filter_id = trace_metadata["EQ_ID"] == eq_id
+            filter_pgv = trace_metadata[filter_id]["pgv"] >= np.log10(0.019)
+            if len(trace_metadata[filter_id][filter_pgv]) < 1:
+                event_filter.append(False)
+            else:
+                event_filter.append(True)
+        event_metadata = event_metadata[event_filter]
+
         if part_small_event:
             small_event = init_event_metadata.query(
                 f"magnitude < {mag_threshold} & year!={test_year}"
@@ -400,7 +411,7 @@ class multiple_station_dataset(Dataset):
                     labels.append(np.zeros_like(label))
             Specific_waveforms = np.array(specific_waveforms)
             if self.mask_waveform_random:
-                random_mask_sec = np.random.randint(self.mask_waveform_sec, 15)
+                random_mask_sec = np.random.randint(self.mask_waveform_sec, 10)
                 Specific_waveforms[
                     :, seen_P_picks[0] + (random_mask_sec * self.sampling_rate) :, :
                 ] = 0
