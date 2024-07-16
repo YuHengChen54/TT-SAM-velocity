@@ -222,7 +222,7 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 15
+    model_index = 16
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
@@ -241,7 +241,7 @@ if __name__ == "__main__":
                 emb_dim = 150
                 mlp_dims = (150, 100, 50, 30, 10)
 
-                CNN_model = CNN(mlp_input=5665).cuda()
+                CNN_model = CNN(downsample=3, mlp_input=5665).cuda()
                 pos_emb_model = PositionEmbedding_Vs30(emb_dim=emb_dim).cuda()
                 transformer_model = TransformerEncoder()
                 mlp_model = MLP(input_shape=(emb_dim,), dims=mlp_dims).cuda()
@@ -276,7 +276,7 @@ if __name__ == "__main__":
                     mask_waveform_random=True,
                     mag_threshold=0,
                     label_key="pgv",
-                    input_type="vel_lowfreq",
+                    input_type="vel",
                     data_length_sec=15,
                     station_blind=True,
                     bias_to_closer_station=True,

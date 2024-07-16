@@ -35,7 +35,7 @@ for mask_sec in [3,5,7,10]:
     )
     # ===========predict==============
     device = torch.device("cuda")
-    for num in [14]:
+    for num in [17]:
         path = f"../model/model{num}_vel.pt"
         # path = "../model/model12_checkpoints/epoch70_model.pt"
         emb_dim = 150
@@ -143,7 +143,7 @@ for mask_sec in [3,5,7,10]:
         fig.savefig(f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec_vel.png")
 
     # ===========merge info==============
-    num = 14
+    num = 17
     Afile_path = "../data"
     output_path = f"../predict/model_{num}_analysis"
     catalog = pd.read_csv(f"{Afile_path}/1999_2019_final_catalog.csv")

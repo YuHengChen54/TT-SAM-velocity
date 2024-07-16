@@ -2,4 +2,18 @@ data/test.txt
 data/TSMIP_1999_2019_Vs30_integral.hdf5
 data/TSMIP_1999_2019_Vs30.hdf5
 predict
-model/model*
+
+model/*
+!model/*.py
+
+/__pycache__
+.vscode
+
+#waveform and catalog
+data/*
+!data/*.py
+
+
+#mlflow
+/mlruns
+

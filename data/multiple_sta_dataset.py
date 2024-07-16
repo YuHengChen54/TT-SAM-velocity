@@ -113,17 +113,6 @@ class multiple_station_dataset(Dataset):
         event_metadata = init_event_metadata[
             init_event_metadata["magnitude"] >= mag_threshold
         ]
-
-        event_filter = []
-        for eq_id in event_metadata["EQ_ID"]:
-            filter_id = trace_metadata["EQ_ID"] == eq_id
-            filter_pgv = trace_metadata[filter_id]["pgv"] >= np.log10(0.019)
-            if len(trace_metadata[filter_id][filter_pgv]) < 1:
-                event_filter.append(False)
-            else:
-                event_filter.append(True)
-        event_metadata = event_metadata[event_filter]
-
         if part_small_event:
             small_event = init_event_metadata.query(
                 f"magnitude < {mag_threshold} & year!={test_year}"
@@ -353,24 +342,32 @@ class multiple_station_dataset(Dataset):
             labels_time = []
             P_picks = []
             for eventID in specific_index[0]:  # trace waveform
+
                 waveform = f["data"][str(eventID[0])][f"{self.input_type}_traces"][
                     eventID[1]
                 ][: (self.data_length_sec * self.sampling_rate), :]
+
+                waveform_lowfreq = f["data"][str(eventID[0])][f"{self.input_type}_lowfreq_traces"][
+                    eventID[1]
+                ][: (self.data_length_sec * self.sampling_rate), :]
+
+                waveform_concat = np.append(waveform, waveform_lowfreq, axis=1)
+
                 station_location = f["data"][str(eventID[0])]["station_location"][
                     eventID[1]
                 ]
                 Vs30 = f["data"][str(eventID[0])]["Vs30"][eventID[1]]
                 station_location = np.append(station_location, Vs30)
-                waveform = np.pad(
-                    waveform,
+                waveform_concat = np.pad(
+                    waveform_concat,
                     (
-                        (0, self.data_length_sec * self.sampling_rate - len(waveform)),
+                        (0, self.data_length_sec * self.sampling_rate - len(waveform_concat)),
                         (0, 0),
                     ),
                     "constant",
                 )
                 p_pick = f["data"][str(eventID[0])]["p_picks"][eventID[1]]
-                specific_waveforms.append(waveform)
+                specific_waveforms.append(waveform_concat)
                 # print(f"first {waveform.shape}")
                 stations_location.append(station_location)
                 seen_P_picks.append(p_pick)
@@ -398,7 +395,7 @@ class multiple_station_dataset(Dataset):
                     self.max_station_num - len(stations_location)
                 ):
                     # print(f"second {waveform.shape}")
-                    specific_waveforms.append(np.zeros_like(waveform))
+                    specific_waveforms.append(np.zeros_like(waveform_concat))
                     stations_location.append(np.zeros_like(station_location))
             # print("================")
             if (
