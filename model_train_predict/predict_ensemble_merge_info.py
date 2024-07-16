@@ -40,7 +40,7 @@ for mask_sec in [3,5,7,10]:
         # path = "../model/model12_checkpoints/epoch70_model.pt"
         emb_dim = 150
         mlp_dims = (150, 100, 50, 30, 10)
-        CNN_model = CNN(mlp_input=5665).cuda()
+        CNN_model = CNN(downsample=3, mlp_input=5665).cuda()
         pos_emb_model = PositionEmbedding_Vs30(emb_dim=emb_dim).cuda()
         transformer_model = TransformerEncoder()
         mlp_model = MLP(input_shape=(emb_dim,), dims=mlp_dims).cuda()
