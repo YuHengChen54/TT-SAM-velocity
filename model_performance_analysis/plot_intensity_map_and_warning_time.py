@@ -4,15 +4,15 @@ import os
 from analysis import Intensity_Plotter,Warning_Time_Plotter
 
 
-model_num = 16
-mask_after_sec = 7
+model_num =9
+mask_after_sec = 10
 label_type = "pgv"
 if label_type == "pga":
     label_threshold = np.log10(0.25)
     intensity = "IV"
 if label_type == "pgv":
-    label_threshold = np.log10(0.15)
-    intensity = "V"
+    label_threshold = np.log10(0.019)
+    intensity = "III"
 
 path = f"../predict/model_{model_num}_analysis"
 output_path = f"{path}/mag bigger 5.5 predict"

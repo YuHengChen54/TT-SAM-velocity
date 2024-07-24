@@ -408,7 +408,7 @@ class multiple_station_dataset(Dataset):
                     labels.append(np.zeros_like(label))
             Specific_waveforms = np.array(specific_waveforms)
             if self.mask_waveform_random:
-                random_mask_sec = np.random.randint(self.mask_waveform_sec, 10)
+                random_mask_sec = np.random.randint(self.mask_waveform_sec, 15)
                 Specific_waveforms[
                     :, seen_P_picks[0] + (random_mask_sec * self.sampling_rate) :, :
                 ] = 0

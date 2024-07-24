@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 import os
 from analysis import Precision_Recall_Factory
 
-model_num = 13
+model_num = 19
 path = f"../predict/model_{model_num}_analysis"
 output_path = f"{path}/model_{model_num}_analysis"
 if not os.path.isdir(output_path):
@@ -73,7 +73,7 @@ for mask_after_sec in [3, 5, 7, 10, 15]:
         matrix = confusion_matrix(real_logic, predict_logic, labels=[1, 0])
         accuracy = np.sum(np.diag(matrix)) / np.sum(matrix)  # (TP+TN)/all
         precision = matrix[0][0] / np.sum(matrix, axis=0)[0]  # TP/(TP+FP)
-        recall = matrix[0][0] / np.sum(matrix, axis=1)[0]  # TP/(TP+FP)
+        recall = matrix[0][0] / np.sum(matrix, axis=1)[0]  # TP/(TP+FN)
         F1_score = 2 / ((1 / precision) + (1 / recall))
         performance_score[f"{label}_threshold ({unit})"].append(
             np.round((10**label_threshold), 3)

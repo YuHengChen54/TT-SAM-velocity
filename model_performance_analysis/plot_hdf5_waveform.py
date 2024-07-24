@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-input_type = "vel_lowfreq"
-eq_id = "24904"
+input_type = "acc"
+eq_id = "25396"
 path = "../data"
 with h5py.File(f"{path}/TSMIP_1999_2019_Vs30_integral.hdf5", "r") as h5_file:
 

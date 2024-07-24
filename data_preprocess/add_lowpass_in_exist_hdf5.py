@@ -36,9 +36,11 @@ with h5py.File(output, "r+") as file:
             _, vel_info = cut_traces(traces, eq_id, waveform_path, waveform_type="vel", vel_lowpass_freq=0.33)
             
             event = data[f"{eq_id}"]
-            event.create_dataset("vel_lowfreq_traces", data=vel_info["traces"], dtype=np.float64)
+            # event.create_dataset("vel_lowfreq_traces", data=vel_info["traces"], dtype=np.float64)
+            event["pgv"][...] = vel_info["pgv"]
         except Exception as reason:
             print(f"EQ_ID:{eq_id}, {reason}")
             error_event["EQ_ID"].append(eq_id)
             error_event["reason"].append(reason)
             continue
+
