@@ -278,6 +278,28 @@ class multiple_station_dataset(Dataset):
                 time = int(
                     np.ceil(len(single_event_index) / max_station_num)
                 )  # 無條件進位
+
+                numbers = np.arange(time)
+
+                # 将前 70% 和后 30% 分开
+                split_point = int(np.floor(0.7 * time))
+                head_numbers = numbers[:split_point]
+                tail_numbers = numbers[split_point:]
+                delete_count = int(np.floor(time * 0.3 / 3))
+
+                # 从后 30% 中随机选择要删除的数字
+                to_delete = np.random.choice(
+                    tail_numbers, size=delete_count, replace=False
+                )
+                # 保留未被删除的数字
+                remaining_tail_numbers = np.setdiff1d(tail_numbers, to_delete)
+
+                # 合并保留的前 70% 和后 30% 中未被删除的数字
+                remaining_numbers = np.concatenate(
+                    (head_numbers, remaining_tail_numbers)
+                )
+                np.array_split(single_event_index, 25)
+
                 # np.array_split(single_event_index, 25)
                 splited_index = np.array_split(
                     single_event_index,
@@ -290,7 +312,7 @@ class multiple_station_dataset(Dataset):
                             max_station_num, max_station_num * time, max_station_num
                         ),
                     )
-                for i in range(time):
+                for i in remaining_numbers:
                     Events_index.append([splited_index[0], splited_index[i]])
                     if bias_to_closer_station:
                         Events_index.append([splited_index[0], splited_index[0]])
@@ -342,14 +364,13 @@ class multiple_station_dataset(Dataset):
             labels_time = []
             P_picks = []
             for eventID in specific_index[0]:  # trace waveform
-
                 waveform = f["data"][str(eventID[0])][f"{self.input_type}_traces"][
                     eventID[1]
                 ][: (self.data_length_sec * self.sampling_rate), :]
 
-                waveform_lowfreq = f["data"][str(eventID[0])][f"{self.input_type}_lowfreq_traces"][
-                    eventID[1]
-                ][: (self.data_length_sec * self.sampling_rate), :]
+                waveform_lowfreq = f["data"][str(eventID[0])][
+                    f"{self.input_type}_lowfreq_traces"
+                ][eventID[1]][: (self.data_length_sec * self.sampling_rate), :]
 
                 waveform_concat = np.append(waveform, waveform_lowfreq, axis=1)
 
@@ -361,7 +382,11 @@ class multiple_station_dataset(Dataset):
                 waveform_concat = np.pad(
                     waveform_concat,
                     (
-                        (0, self.data_length_sec * self.sampling_rate - len(waveform_concat)),
+                        (
+                            0,
+                            self.data_length_sec * self.sampling_rate
+                            - len(waveform_concat),
+                        ),
                         (0, 0),
                     ),
                     "constant",
@@ -395,7 +420,7 @@ class multiple_station_dataset(Dataset):
                     self.max_station_num - len(stations_location)
                 ):
                     # print(f"second {waveform.shape}")
-                    specific_waveforms.append(np.zeros_like(waveform_concat))
+                    specific_waveforms.append(np.zeros_like(waveform))
                     stations_location.append(np.zeros_like(station_location))
             # print("================")
             if (
@@ -408,7 +433,7 @@ class multiple_station_dataset(Dataset):
                     labels.append(np.zeros_like(label))
             Specific_waveforms = np.array(specific_waveforms)
             if self.mask_waveform_random:
-                random_mask_sec = np.random.randint(self.mask_waveform_sec, 15)
+                random_mask_sec = np.random.randint(self.mask_waveform_sec, 10)
                 Specific_waveforms[
                     :, seen_P_picks[0] + (random_mask_sec * self.sampling_rate) :, :
                 ] = 0
