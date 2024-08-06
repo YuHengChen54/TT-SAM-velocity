@@ -222,12 +222,12 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 32
+    model_index = 35
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
         for LR in [2.5e-5]:
-            for i in range(3): #原本是3
+            for i in range(6): #原本是3
                 model_index += 1
                 hyper_param = {
                     "model_index": model_index,
