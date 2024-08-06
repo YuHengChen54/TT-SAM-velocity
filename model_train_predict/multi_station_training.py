@@ -32,11 +32,11 @@ create an experiment, its name: "bias to close station"
 mlflow.set_tracking_uri("http://localhost:5000")
 
 # # 設置實驗名稱
-# experiment_name = "TT-SAM initial test"
+# experiment_name = "TT-SAM Vel + Lowfreq, delete far small intensity"
 
 # # 確認實驗是否存在，如果不存在則創建它
 # experiment = mlflow.get_experiment_by_name(experiment_name)
-# experiment_id = mlflow.create_experiment("TT-SAM initial test")
+# experiment_id = mlflow.create_experiment(experiment_name)
 
 def train_process(
     full_Model,
@@ -222,12 +222,12 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 19
+    model_index = 32
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
         for LR in [2.5e-5]:
-            for i in range(1): #原本是3
+            for i in range(3): #原本是3
                 model_index += 1
                 hyper_param = {
                     "model_index": model_index,
@@ -270,7 +270,7 @@ if __name__ == "__main__":
                     mode="train",
                     mask_waveform_sec=3,
                     weight_label=False,
-                    oversample=1.5,
+                    oversample=1.25,
                     oversample_mag=4,
                     test_year=2016,
                     mask_waveform_random=True,
@@ -286,6 +286,6 @@ if __name__ == "__main__":
                     full_data,
                     optimizer,
                     hyper_param,
-                    experiment_name="TT-SAM 20 sec time window",
-                    run_name="0716 model 20 vel+lowfreq 20 sec",
+                    experiment_name="TT-SAM Vel + Lowfreq, delete small intensity",
+                    run_name="0805 vel+lowfreq 20s -- delete stations less than 25 data",
                 )

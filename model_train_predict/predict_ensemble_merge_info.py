@@ -20,7 +20,7 @@ from model.CNN_Transformer_Mixtureoutput_TEAM import (
 from data.multiple_sta_dataset import multiple_station_dataset
 from model_performance_analysis.analysis import Intensity_Plotter
 
-for mask_sec in [7, 10, 13, 15]:
+for mask_sec in [3, 5, 7, 10, 13, 15]:
     mask_after_sec = mask_sec
     label = "pgv"
     data = multiple_station_dataset(
@@ -35,12 +35,12 @@ for mask_sec in [7, 10, 13, 15]:
     )
     # ===========predict==============
     device = torch.device("cuda")
-    for num in [12]:
+    for num in [34]:
         path = f"../model/model{num}_vel.pt"
         # path = "../model/model19_checkpoints/epoch70_model.pt"
         emb_dim = 150
         mlp_dims = (150, 100, 50, 30, 10)
-        CNN_model = CNN(downsample=1, mlp_input=7665).cuda()
+        CNN_model = CNN(downsample=3, mlp_input=7665).cuda()
         pos_emb_model = PositionEmbedding_Vs30(emb_dim=emb_dim).cuda()
         transformer_model = TransformerEncoder()
         mlp_model = MLP(input_shape=(emb_dim,), dims=mlp_dims).cuda()
@@ -114,9 +114,9 @@ for mask_sec in [7, 10, 13, 15]:
         }
         output_df = pd.DataFrame(output)
         output_df = output_df[output_df["answer"] != 0]
-        # output_df.to_csv(
-        #     f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
-        # )
+        output_df.to_csv(
+            f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
+        )
         fig, ax = Intensity_Plotter.plot_true_predicted(
             y_true=output_df["answer"],
             y_pred=output_df["predict"],
@@ -126,12 +126,12 @@ for mask_sec in [7, 10, 13, 15]:
             target=label,
         )
         eq_id = 24784
-        # ax.scatter(
-        #     output_df["answer"][output_df["EQ_ID"] == eq_id],
-        #     output_df["predict"][output_df["EQ_ID"] == eq_id],
-        #     c="r",
+        ax.scatter(
+            output_df["answer"][output_df["EQ_ID"] == eq_id],
+            output_df["predict"][output_df["EQ_ID"] == eq_id],
+            c="r",
         
-        # )
+        )
         magnitude = data.event_metadata[data.event_metadata["EQ_ID"] == eq_id][
             "magnitude"
         ].values[0]
@@ -140,7 +140,7 @@ for mask_sec in [7, 10, 13, 15]:
             fontsize=20,
         )
 
-        # fig.savefig(f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec_vel.png")
+        fig.savefig(f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec_vel.png")
 
     # # ===========merge info==============
     # num = 19

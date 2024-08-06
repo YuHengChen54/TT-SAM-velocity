@@ -209,6 +209,17 @@ class multiple_station_dataset(Dataset):
         ok_event_id = np.intersect1d(
             np.array(event_metadata["EQ_ID"].values), ok_events_index
         )
+        # print(ok_event_id)
+        # print(len(ok_event_id))
+        ok_event_id = list(ok_event_id)
+        # print(trace_metadata)
+        for event in range(len(ok_event_id) - 1, -1, -1):
+            filter_id = trace_metadata["EQ_ID"] == ok_event_id[event]
+            if len(trace_metadata[filter_id]) <= 25:
+                del ok_event_id[event]
+        ok_event_id = np.array(ok_event_id)
+        # print(ok_event_id)
+        # print(len(ok_event_id))
         if oversample > 1:
             oversampled_catalog = []
             filter = event_metadata["magnitude"] >= oversample_mag
@@ -222,7 +233,13 @@ class multiple_station_dataset(Dataset):
                 oversampled_catalog.extend(repeat(eventid, repeat_time))
 
             oversampled_catalog = np.array(oversampled_catalog)
+            # print(oversampled_catalog)
+            # print(len(oversample_catalog))
+            # print(f"before oversample:{ok_event_id}")
+            # print(f"before oversample:{len(ok_event_id)}")
             ok_event_id = np.concatenate([ok_event_id, oversampled_catalog])
+            # print(f"after oversample:{ok_event_id}")
+            # print(f"after oversample:{len(ok_event_id)}")
         if oversample_by_labels:
             oversampled_labels = []
             oversampled_picks = []
@@ -285,19 +302,22 @@ class multiple_station_dataset(Dataset):
                 split_point = int(np.floor(0.7 * time))
                 head_numbers = numbers[:split_point]
                 tail_numbers = numbers[split_point:]
-                delete_count = int(np.floor(time * 0.3 / 3))
+                delete_count = int(np.floor(time * 0.3 / 1.5))
 
                 # 从后 30% 中随机选择要删除的数字
-                to_delete = np.random.choice(
-                    tail_numbers, size=delete_count, replace=False
-                )
-                # 保留未被删除的数字
-                remaining_tail_numbers = np.setdiff1d(tail_numbers, to_delete)
+                if time >= 2000:
+                    to_delete = np.random.choice(
+                        tail_numbers, size=delete_count, replace=False
+                    )
+                    # 保留未被删除的数字
+                    remaining_tail_numbers = np.setdiff1d(tail_numbers, to_delete)
 
-                # 合并保留的前 70% 和后 30% 中未被删除的数字
-                remaining_numbers = np.concatenate(
-                    (head_numbers, remaining_tail_numbers)
-                )
+                    # 合并保留的前 70% 和后 30% 中未被删除的数字
+                    remaining_numbers = np.concatenate(
+                        (head_numbers, remaining_tail_numbers)
+                    )
+                else:
+                    remaining_numbers = np.concatenate((head_numbers, tail_numbers))
                 np.array_split(single_event_index, 25)
 
                 # np.array_split(single_event_index, 25)
@@ -364,6 +384,7 @@ class multiple_station_dataset(Dataset):
             labels_time = []
             P_picks = []
             for eventID in specific_index[0]:  # trace waveform
+
                 waveform = f["data"][str(eventID[0])][f"{self.input_type}_traces"][
                     eventID[1]
                 ][: (self.data_length_sec * self.sampling_rate), :]
@@ -420,7 +441,7 @@ class multiple_station_dataset(Dataset):
                     self.max_station_num - len(stations_location)
                 ):
                     # print(f"second {waveform.shape}")
-                    specific_waveforms.append(np.zeros_like(waveform))
+                    specific_waveforms.append(np.zeros_like(waveform_concat))
                     stations_location.append(np.zeros_like(station_location))
             # print("================")
             if (
@@ -433,7 +454,7 @@ class multiple_station_dataset(Dataset):
                     labels.append(np.zeros_like(label))
             Specific_waveforms = np.array(specific_waveforms)
             if self.mask_waveform_random:
-                random_mask_sec = np.random.randint(self.mask_waveform_sec, 10)
+                random_mask_sec = np.random.randint(self.mask_waveform_sec, 15)
                 Specific_waveforms[
                     :, seen_P_picks[0] + (random_mask_sec * self.sampling_rate) :, :
                 ] = 0
