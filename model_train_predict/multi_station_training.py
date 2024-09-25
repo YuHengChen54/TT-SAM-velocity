@@ -222,7 +222,7 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 35
+    model_index = 32
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
@@ -287,5 +287,5 @@ if __name__ == "__main__":
                     optimizer,
                     hyper_param,
                     experiment_name="TT-SAM Vel + Lowfreq, delete small intensity",
-                    run_name="0805 vel+lowfreq 20s -- delete stations less than 25 data",
+                    run_name="0807 vel+lowfreq 20s -- delete stations less than 50 data",
                 )

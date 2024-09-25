@@ -15,10 +15,10 @@ if label_type == "pgv":
     intensity = "III"
 
 path = f"../predict/model_{model_num}_analysis"
-output_path = f"{path}/mag bigger 5.5 predict"
-if not os.path.isdir(output_path):
-    os.mkdir(output_path)
-Afile_path = "../data"
+# output_path = f"{path}/mag bigger 5.5 predict"
+# if not os.path.isdir(output_path):
+#     os.mkdir(output_path)
+# Afile_path = "../data"
 
 catalog = pd.read_csv(f"{Afile_path}/1999_2019_final_catalog.csv")
 # traces_info = pd.read_csv(

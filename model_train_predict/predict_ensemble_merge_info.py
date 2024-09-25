@@ -35,7 +35,7 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
     )
     # ===========predict==============
     device = torch.device("cuda")
-    for num in [34]:
+    for num in [19]:
         path = f"../model/model{num}_vel.pt"
         # path = "../model/model19_checkpoints/epoch70_model.pt"
         emb_dim = 150
@@ -112,35 +112,39 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
             "longitude": Lon,
             "elevation": Elev,
         }
-        output_df = pd.DataFrame(output)
-        output_df = output_df[output_df["answer"] != 0]
-        output_df.to_csv(
-            f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
-        )
+        # output_df = pd.DataFrame(output)
+        # output_df = output_df[output_df["answer"] != 0]
+        # # output_df.to_csv(
+        #     f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
+        # )
+
+        output_df = pd.read_csv(f"../predict/model_3_analysis(velocity)/model 3 {mask_after_sec} sec prediction_vel.csv")
+
         fig, ax = Intensity_Plotter.plot_true_predicted(
-            y_true=output_df["answer"],
-            y_pred=output_df["predict"],
+            y_true=output_df["answer"][output_df["answer"] < np.log10(0.057)],
+            y_pred=output_df["predict"][output_df["answer"] < np.log10(0.057)],
             quantile=False,
             agg="point",
             point_size=12,
             target=label,
         )
-        eq_id = 24784
+        # eq_id = 24784
         ax.scatter(
-            output_df["answer"][output_df["EQ_ID"] == eq_id],
-            output_df["predict"][output_df["EQ_ID"] == eq_id],
-            c="r",
+            output_df["answer"][output_df["answer"] >= np.log10(0.057)],
+            output_df["predict"][output_df["answer"] >= np.log10(0.057)],
+            c="orange",
+            s=12
         
         )
-        magnitude = data.event_metadata[data.event_metadata["EQ_ID"] == eq_id][
-            "magnitude"
-        ].values[0]
+        # magnitude = data.event_metadata[data.event_metadata["EQ_ID"] == eq_id][
+        #     "magnitude"
+        # ].values[0]
         ax.set_title(
             f"{mask_after_sec}s True Predict Plot, 2016 data",
             fontsize=20,
         )
 
-        fig.savefig(f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec_vel.png")
+        # fig.savefig(f"../predict/model {num} {mask_after_sec} sec_vel.png")
 
     # # ===========merge info==============
     # num = 19

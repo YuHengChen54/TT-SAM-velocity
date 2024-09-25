@@ -13,6 +13,12 @@ model_train_predict/mlruns
 /__pycache__
 .vscode
 
+data_preprocess/*
+!data_preprocess/*.py
+
+model_performance_analysis/*
+!model_performance_analysis/*.py
+
 #waveform and catalog
 data/*
 !data/*.py

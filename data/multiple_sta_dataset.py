@@ -179,7 +179,8 @@ class multiple_station_dataset(Dataset):
                         data[key] += [g_event[key][()]]
                     if key == "p_picks":
                         data[key][-1] //= decimate
-
+                # print(single_event_index)
+                # print(len(single_event_index))
                 events_index = np.append(events_index, single_event_index, axis=0)
                 # events_index.append(single_event_index)
             events_index = np.delete(events_index, [0], 0)
@@ -215,7 +216,7 @@ class multiple_station_dataset(Dataset):
         # print(trace_metadata)
         for event in range(len(ok_event_id) - 1, -1, -1):
             filter_id = trace_metadata["EQ_ID"] == ok_event_id[event]
-            if len(trace_metadata[filter_id]) <= 25:
+            if len(trace_metadata[filter_id]) <= 50:
                 del ok_event_id[event]
         ok_event_id = np.array(ok_event_id)
         # print(ok_event_id)
@@ -343,6 +344,7 @@ class multiple_station_dataset(Dataset):
                 Events_index.append([single_event_index, single_event_index])
                 if weight_label:
                     Weight.append(np.mean(single_event_label_weight))
+        # print(Events_index)
 
         # specific_index=Events_index[400]
         self.data_path = data_path
@@ -394,7 +396,7 @@ class multiple_station_dataset(Dataset):
                 ][eventID[1]][: (self.data_length_sec * self.sampling_rate), :]
 
                 waveform_concat = np.append(waveform, waveform_lowfreq, axis=1)
-
+                # waveform_concat = waveform
                 station_location = f["data"][str(eventID[0])]["station_location"][
                     eventID[1]
                 ]

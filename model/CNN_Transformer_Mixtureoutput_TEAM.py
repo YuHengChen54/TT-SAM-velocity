@@ -54,12 +54,16 @@ class MLP(nn.Module):
 class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
     def __init__(
         self,
+        input_shape=(-1, 6000, 3),
+        activation=nn.ReLU(),
         downsample=1,
         mlp_input=11665,
         mlp_dims=(500, 300, 200, 150),
         eps=1e-8,
     ):
         super(CNN, self).__init__()
+        self.input_shape = input_shape
+        self.activation = activation
         self.downsample = downsample
         self.mlp_input = mlp_input
         self.mlp_dims = mlp_dims
@@ -114,7 +118,7 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
 
         output = self.conv2d1(output)
         output = self.conv2d2(output)
-        # print(output.size())
+        # print(output.shape)
         output = torch.squeeze(output, dim=-1)
         output = self.conv1d1(output)
         output = self.maxpooling(output)
