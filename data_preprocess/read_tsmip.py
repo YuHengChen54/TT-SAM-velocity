@@ -69,7 +69,7 @@ def read_header(header, EQ_ID=None):
         "depth": float(header[33:39]),
         "magnitude": float(header[39:43]),
         "nsta": header[43:45].replace(" ", ""),
-        "nearest_sta_dist (km)": header[45:50].replace(" ", "")
+        "nearest_sta_dist (km)": header[45:50].replace(" ", ""),
         # "Pfilename": header[46:58].replace(" ", ""),
         # "newNoPick": header[60:63].replace(" ", ""),
     }
@@ -217,15 +217,15 @@ def trace_pick_plot(
     return p_pick, s_pick, fig
 
 
-def get_peak_value(stream, pick_point=0,thresholds=None):
+def get_peak_value(stream, pick_point=0, thresholds=None):
     data = [tr.data for tr in stream]
     data = np.array(data)
-    data=data[:,pick_point:]
+    data = data[:, pick_point:]
     vector = np.linalg.norm(data, axis=0)
 
     peak = max(vector)
     peak_time = np.argmax(vector, axis=0)
-    peak_time+=pick_point
+    peak_time += pick_point
     peak = np.log10(peak / 100)
 
     exceed_times = np.zeros(5)
@@ -249,6 +249,13 @@ def get_integrated_stream(stream):
     return stream_intergrated
 
 
+def get_integrated_stream_second(stream):
+    stream_intergrated = stream.copy()
+    stream_intergrated.integrate()
+    stream_intergrated.filter("highpass", freq=0.075)
+    return stream_intergrated
+
+
 def cut_traces(
     traces,
     eq_id,
@@ -257,7 +264,7 @@ def cut_traces(
     trace_length_sec=30,
     target_sampling_rate=200,
     waveform_type="acc",
-    vel_lowpass_freq=None
+    vel_lowpass_freq=None,
 ):  # traces is dataframe
     traces_info = {
         "traces": [],
@@ -283,8 +290,10 @@ def cut_traces(
         path = f"{waveform_path}/{year}/{month}"
         file_name = file_name.strip()
         stream = read_tsmip(f"{path}/{file_name}.txt")
-    except: #for special case
-        data = pd.read_csv(f"{waveform_path}/{file_name}.asc", sep="\s+", skiprows=1, header=None).to_numpy()
+    except:  # for special case
+        data = pd.read_csv(
+            f"{waveform_path}/{file_name}.asc", sep="\s+", skiprows=1, header=None
+        ).to_numpy()
 
         with open(f"{waveform_path}/{file_name}.asc", "r") as f:
             picks = f.readlines()[0]
@@ -318,22 +327,22 @@ def cut_traces(
             stream.filter("lowpass", freq=vel_lowpass_freq)
     elif waveform_type == "dis":
         stream = get_integrated_stream(stream)
-        stream = get_integrated_stream(stream)
+        stream = get_integrated_stream_second(stream)
 
     trace = np.transpose(np.array(stream)) / 100  # cm/s^2 to m/s^2
 
     trace_length_point = int(trace_length_sec * target_sampling_rate)
     first_start_cut_point = int(
-    np.round(
-        (
-            tmp_traces["p_pick_sec"][0] - pd.Timedelta(seconds=before_p_sec)
-        ).total_seconds(),
-        2,
-    )
-    * target_sampling_rate
+        np.round(
+            (
+                tmp_traces["p_pick_sec"][0] - pd.Timedelta(seconds=before_p_sec)
+            ).total_seconds(),
+            2,
+        )
+        * target_sampling_rate
     )
     abs_cut_starttime = tmp_traces["p_arrival_abs_time"][0] - pd.Timedelta(
-    seconds=before_p_sec
+        seconds=before_p_sec
     )
     if first_start_cut_point < 0:
         first_start_cut_point = 0
@@ -352,9 +361,7 @@ def cut_traces(
         ]
 
     p_picks_point = int(
-        np.round(
-            tmp_traces["p_pick_sec"][0].total_seconds() * target_sampling_rate, 0
-        )
+        np.round(tmp_traces["p_pick_sec"][0].total_seconds() * target_sampling_rate, 0)
         - first_start_cut_point
     )
     pga_time = int(tmp_traces["pga_time"][0] - first_start_cut_point)
@@ -381,8 +388,13 @@ def cut_traces(
                 path = f"{waveform_path}/{year}/{month}"
                 file_name = file_name.strip()
                 stream = read_tsmip(f"{path}/{file_name}.txt")
-            except: #for special case
-                data = pd.read_csv(f"{waveform_path}/{file_name}.asc", sep="\s+", skiprows=1, header=None).to_numpy()
+            except:  # for special case
+                data = pd.read_csv(
+                    f"{waveform_path}/{file_name}.asc",
+                    sep="\s+",
+                    skiprows=1,
+                    header=None,
+                ).to_numpy()
 
                 with open(f"{waveform_path}/{file_name}.asc", "r") as f:
                     picks = f.readlines()[0]
@@ -417,13 +429,13 @@ def cut_traces(
                     stream.filter("lowpass", freq=vel_lowpass_freq)
             elif waveform_type == "dis":
                 stream = get_integrated_stream(stream)
-                stream = get_integrated_stream(stream)
+                stream = get_integrated_stream_second(stream)
 
             trace = np.transpose(np.array(stream)) / 100  # cm/s^2 to m/s^2
             window_cut_time = (
-                        tmp_traces["p_pick_sec"][i] 
-                        - (tmp_traces["p_arrival_abs_time"][i] - abs_cut_starttime)
-                    ).total_seconds()
+                tmp_traces["p_pick_sec"][i]
+                - (tmp_traces["p_arrival_abs_time"][i] - abs_cut_starttime)
+            ).total_seconds()
             start_cut_point = int(window_cut_time * target_sampling_rate)
             if window_cut_time < 0:
                 # print("pad at the beginning")
@@ -448,8 +460,7 @@ def cut_traces(
                 )
             p_picks_point = int(
                 np.round(
-                    tmp_traces["p_pick_sec"][i].total_seconds()
-                    * target_sampling_rate,
+                    tmp_traces["p_pick_sec"][i].total_seconds() * target_sampling_rate,
                     0,
                 )
                 - start_cut_point
