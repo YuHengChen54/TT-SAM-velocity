@@ -20,7 +20,7 @@ from model.CNN_Transformer_Mixtureoutput_TEAM import (
 from data.multiple_sta_dataset import multiple_station_dataset
 from model_performance_analysis.analysis import Intensity_Plotter
 
-for mask_sec in [3, 5, 7, 10, 13, 15]:
+for mask_sec in [3, 5, 7, 10]:
     mask_after_sec = mask_sec
     label = "pgv"
     data = multiple_station_dataset(
@@ -35,7 +35,7 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
     )
     # ===========predict==============
     device = torch.device("cuda")
-    for num in [19]:
+    for num in [24]:
         path = f"../model/model{num}_vel.pt"
         # path = "../model/model19_checkpoints/epoch70_model.pt"
         emb_dim = 150
@@ -112,13 +112,13 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
             "longitude": Lon,
             "elevation": Elev,
         }
-        # output_df = pd.DataFrame(output)
-        # output_df = output_df[output_df["answer"] != 0]
-        # # output_df.to_csv(
+        output_df = pd.DataFrame(output)
+        output_df = output_df[output_df["answer"] != 0]
+        # output_df.to_csv(
         #     f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
         # )
 
-        output_df = pd.read_csv(f"../predict/model_3_analysis(velocity)/model 3 {mask_after_sec} sec prediction_vel.csv")
+        # output_df = pd.read_csv(f"../predict/model_3_analysis(velocity)/model 3 {mask_after_sec} sec prediction_vel.csv")
 
         fig, ax = Intensity_Plotter.plot_true_predicted(
             y_true=output_df["answer"][output_df["answer"] < np.log10(0.057)],

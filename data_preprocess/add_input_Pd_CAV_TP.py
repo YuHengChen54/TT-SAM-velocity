@@ -75,6 +75,24 @@ def plot_waveform(
     ax.legend(loc="upper left")
     fig.show()
 
+##################################### 刪除特定dataset #####################################
+# 開啟 HDF5 檔案
+# with h5py.File(output, "r+") as file:
+#     data = file["data"]
+    
+#     # 遍歷 catalog 中的 EQ_ID
+#     for eq_id in catalog["EQ_ID"]:
+#         try:
+#             event = data[f"{eq_id}"]
+            
+#             # 檢查是否存在 "Peak_dis" dataset
+#             if "TP" in event:
+#                 # 刪除 "Peak_dis" dataset
+#                 del event["TP"]
+#                 print(f"Deleted 'TP' for event {eq_id}")
+#         except KeyError:
+#             print(f"Event {eq_id} not found in the dataset.")
+
 
 ##################################### Reintegral displacement data #####################################
 # refer reintegrate velocity waveform
@@ -156,17 +174,23 @@ with h5py.File(output, "r+") as file:
     for eq_id in tqdm(catalog["EQ_ID"]):
         try:
             event = data[f"{eq_id}"]
-            vel_wave = np.array(event["vel_traces"])
-            dis_wave = np.array(event["dis_traces_reintegrate"])
+            vel_wave = np.abs(np.array(event["vel_traces"]))
+            dis_wave = np.abs(np.array(event["dis_traces_reintegrate"]))
             Pd = np.array(event["Peak_dis"])
             vel_all = (np.linalg.norm(vel_wave, axis=2)) ** 2
             dis_all = (np.linalg.norm(dis_wave, axis=2)) ** 2
             vel_cum = np.add.accumulate(vel_all, axis=1)
             dis_cum = np.add.accumulate(dis_all, axis=1)
-            r = vel_cum / dis_cum
-            TAUc = (2 * np.pi) / np.sqrt(r)
+            eps = 1e-10 # 避免出現0除0的情況
+            r = vel_cum / (dis_cum + eps)
+            TAUc = (2 * np.pi) / (np.sqrt(r) + eps)
             TAUc = np.expand_dims(TAUc, axis=2)
             TP = TAUc * Pd
+            if np.isnan(TP).any():
+                nan_indices = np.argwhere(np.isnan(TP))  # 獲取 NaN 的索引
+                print(f"TP 中發現 NaN，位置為: {nan_indices}")
+            else:
+                print("TP 中沒有 NaN 值。")
 
             event.create_dataset("TP", data=TP, dtype=np.float64)
         except Exception as reason:

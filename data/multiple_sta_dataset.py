@@ -393,9 +393,28 @@ class multiple_station_dataset(Dataset):
 
                 waveform_lowfreq = f["data"][str(eventID[0])][
                     f"{self.input_type}_lowfreq_traces"
-                ][eventID[1]][: (self.data_length_sec * self.sampling_rate), :]
+                ][eventID[1]][: (self.data_length_sec * self.sampling_rate)]
 
                 waveform_concat = np.append(waveform, waveform_lowfreq, axis=1)
+
+                Pd = f["data"][str(eventID[0])]["Peak_dis"][eventID[1]][
+                    : (self.data_length_sec * self.sampling_rate), :
+                ]
+
+                CAV = f["data"][str(eventID[0])]["Cumulative_abs_vel"][eventID[1]][
+                    : (self.data_length_sec * self.sampling_rate), :
+                ]
+
+                TP = f["data"][str(eventID[0])]["TP"][eventID[1]][
+                    : (self.data_length_sec * self.sampling_rate), :
+                ]
+
+                # print(waveform_concat.shape)
+                waveform_concat = np.append(waveform_concat, Pd, axis=1)
+                waveform_concat = np.append(waveform_concat, CAV, axis=1)
+                waveform_concat = np.append(waveform_concat, TP, axis=1)
+                # print(waveform_concat.shape)
+
                 # waveform_concat = waveform
                 station_location = f["data"][str(eventID[0])]["station_location"][
                     eventID[1]
