@@ -4,8 +4,8 @@ import os
 from analysis import Intensity_Plotter,Warning_Time_Plotter
 
 
-model_num =9
-mask_after_sec = 10
+model_num = 24
+mask_after_sec = 13
 label_type = "pgv"
 if label_type == "pga":
     label_threshold = np.log10(0.25)
@@ -18,7 +18,7 @@ path = f"../predict/model_{model_num}_analysis"
 # output_path = f"{path}/mag bigger 5.5 predict"
 # if not os.path.isdir(output_path):
 #     os.mkdir(output_path)
-# Afile_path = "../data"
+Afile_path = "../data"
 
 catalog = pd.read_csv(f"{Afile_path}/1999_2019_final_catalog.csv")
 # traces_info = pd.read_csv(

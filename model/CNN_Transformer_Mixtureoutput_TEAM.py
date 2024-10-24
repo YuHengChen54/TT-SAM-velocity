@@ -134,7 +134,6 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         # print(output.size()[-1])
         output = self.mlp(output)
         # print("output:", output.size())
-
         return output
 
 
@@ -240,7 +239,7 @@ class PositionEmbedding(
         self,
         wavelengths=((5, 30), (110, 123), (0.01, 5000)),
         emb_dim=500,
-        **kwargs
+        **kwargs,
         # self, wavelengths=((21, 26), (119, 123), (0.01, 4000)), emb_dim=500, **kwargs
     ):
         super(PositionEmbedding, self).__init__(**kwargs)
@@ -336,7 +335,7 @@ class PositionEmbedding_Vs30(
         self,
         wavelengths=((5, 30), (110, 123), (0.01, 5000), (100, 1600)),
         emb_dim=500,
-        **kwargs
+        **kwargs,
         # self, wavelengths=((21, 26), (119, 123), (0.01, 4000)), emb_dim=500, **kwargs
     ):
         super(PositionEmbedding_Vs30, self).__init__(**kwargs)

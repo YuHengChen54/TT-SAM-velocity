@@ -27,6 +27,10 @@ In Terminal, you need to type
 
 enter to UI at local host
 create an experiment, its name: "bias to close station"
+
+connect mlflow ui :
+mlflow server --host localhost --port 5000 
+
 """
 
 mlflow.set_tracking_uri("http://localhost:5000")
@@ -222,12 +226,12 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 20
+    model_index = 29
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
-        for LR in [1e-5, 2.5e-5]:
-            for i in range(3): #原本是3
+        for LR in [2.5e-5]:
+            for i in range(6): #原本是3
                 model_index += 1
                 hyper_param = {
                     "model_index": model_index,
@@ -287,5 +291,5 @@ if __name__ == "__main__":
                     optimizer,
                     hyper_param,
                     experiment_name="input [vel, lowfreq_vel, Pd, CAV, TP]",
-                    run_name="20241007 training",
+                    run_name="20241009 test",
                 )

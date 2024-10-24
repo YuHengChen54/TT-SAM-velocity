@@ -400,14 +400,6 @@ class Intensity_Plotter:
         # ax.set_ylim(-3.5,1.5)
         # ax.set_xlim(-3.5,1.5)
 
-        r2 = metrics.r2_score(y_true, y_pred_point)
-        ax.text(
-            min(np.min(y_true), limits[0]),
-            max(np.max(y_pred_point), limits[1]),
-            f"$R^2={r2:.2f}$",
-            va="top",
-            fontsize=axis_fontsize - 5,
-        )
 
         # return ax, cbar
         return fig, ax

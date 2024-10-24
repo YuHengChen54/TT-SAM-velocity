@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+import sklearn.metrics as metrics
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import sys
@@ -20,7 +21,7 @@ from model.CNN_Transformer_Mixtureoutput_TEAM import (
 from data.multiple_sta_dataset import multiple_station_dataset
 from model_performance_analysis.analysis import Intensity_Plotter
 
-for mask_sec in [3, 5, 7, 10]:
+for mask_sec in [3, 5, 7, 10, 11, 13]:
     mask_after_sec = mask_sec
     label = "pgv"
     data = multiple_station_dataset(
@@ -114,9 +115,9 @@ for mask_sec in [3, 5, 7, 10]:
         }
         output_df = pd.DataFrame(output)
         output_df = output_df[output_df["answer"] != 0]
-        # output_df.to_csv(
-        #     f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
-        # )
+        output_df.to_csv(
+            f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
+        )
 
         # output_df = pd.read_csv(f"../predict/model_3_analysis(velocity)/model 3 {mask_after_sec} sec prediction_vel.csv")
 
@@ -128,26 +129,57 @@ for mask_sec in [3, 5, 7, 10]:
             point_size=12,
             target=label,
         )
-        # eq_id = 24784
+
         ax.scatter(
             output_df["answer"][output_df["answer"] >= np.log10(0.057)],
             output_df["predict"][output_df["answer"] >= np.log10(0.057)],
             c="orange",
             s=12
         
+        ) 
+
+        r2_greater4 = metrics.r2_score(output_df["answer"][output_df["answer"] >= np.log10(0.057)], output_df["predict"][output_df["answer"] >= np.log10(0.057)])
+        r2 = metrics.r2_score(output_df["answer"], output_df["predict"])
+
+        limits = (np.min(output_df["answer"]) - 0.5, np.max(output_df["answer"])-0.5)
+        ax.text(
+            min(np.min(output_df["answer"]), limits[0]),
+            max(np.max(output_df["answer"]), limits[1])-0.5,
+            f"$R^2={r2:.2f}$",
+            fontweight=1000, 
+            va="top",
+            fontsize=15,
+            color="dodgerblue", 
+            
         )
+        ax.text(
+            min(np.min(output_df["answer"]), limits[0])+0.7, 
+            max(np.max(output_df["answer"]), limits[1])-0.5,
+            f"$R^2={r2_greater4:.2f}$",
+            fontweight=1000, 
+            va="top",
+            fontsize=15,
+            color="darkorange", 
+        )
+        # eq_id = 24784
+        # ax.scatter(
+        # output_df["answer"][output_df["EQ_ID"] == eq_id],
+        # output_df["predict"][output_df["EQ_ID"] == eq_id],
+        # c="r",
+        # )
+        
         # magnitude = data.event_metadata[data.event_metadata["EQ_ID"] == eq_id][
         #     "magnitude"
         # ].values[0]
         ax.set_title(
-            f"{mask_after_sec}s True Predict Plot, 2016 data",
+            f"{mask_after_sec}s True Predict Plot, 2016 data model{num}",
             fontsize=20,
         )
 
-        # fig.savefig(f"../predict/model {num} {mask_after_sec} sec_vel.png")
+        fig.savefig(f"../predict/model {num} {mask_after_sec} sec_vel.png")
 
     # # ===========merge info==============
-    # num = 19
+    # num = 24
     # Afile_path = "../data"
     # output_path = f"../predict/model_{num}_analysis"
     # catalog = pd.read_csv(f"{Afile_path}/1999_2019_final_catalog.csv")
