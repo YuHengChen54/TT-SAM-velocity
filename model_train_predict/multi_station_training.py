@@ -12,6 +12,7 @@ import sys
 sys.path.append("..")
 from model.CNN_Transformer_Mixtureoutput_TEAM import (
     CNN,
+    CNN_parameter,
     MDN,
     MLP,
     PositionEmbedding_Vs30,  # if you don't have vs30 data, please use "PositionEmbedding"
@@ -41,6 +42,7 @@ mlflow.set_tracking_uri("http://localhost:5000")
 # # 確認實驗是否存在，如果不存在則創建它
 # experiment = mlflow.get_experiment_by_name(experiment_name)
 # experiment_id = mlflow.create_experiment(experiment_name)
+
 
 def train_process(
     full_Model,
@@ -180,16 +182,16 @@ def train_process(
                 )
             # epoch early stop:
             current_loss = val_loss.data
-            if the_last_loss < -1: ### 測試比較少訓練的時候改這裡 原本是-1
-                patience = 15 ### 測試比較少訓練的時候改這裡 原本是 15
-            if current_loss > the_last_loss: ### 測試比較少訓練的時候改這裡
+            if the_last_loss < -1:  ### 測試比較少訓練的時候改這裡 原本是-1
+                patience = 15  ### 測試比較少訓練的時候改這裡 原本是 15
+            if current_loss > the_last_loss:  ### 測試比較少訓練的時候改這裡
                 trigger_times += 1
                 print("early stop trigger times:", trigger_times)
 
                 if trigger_times >= patience:
-                #往前縮排測試
+                    # 往前縮排測試
                     path = "../model"
-                # if epoch+1 == hyper_param["num_epochs"]:
+                    # if epoch+1 == hyper_param["num_epochs"]:
                     print(f"Early stopping! stop at epoch: {epoch+1}")
                     with open(
                         f"{path}/train loss{hyper_param['model_index']}", "wb"
@@ -226,12 +228,12 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 29
+    model_index = 30
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
         for LR in [2.5e-5]:
-            for i in range(6): #原本是3
+            for i in range(5):  # 原本是3
                 model_index += 1
                 hyper_param = {
                     "model_index": model_index,
@@ -246,6 +248,7 @@ if __name__ == "__main__":
                 mlp_dims = (150, 100, 50, 30, 10)
 
                 CNN_model = CNN(downsample=3, mlp_input=7665).cuda()
+                CNN_model_parameter = CNN_parameter(mlp_input=7665).cuda()
                 pos_emb_model = PositionEmbedding_Vs30(emb_dim=emb_dim).cuda()
                 transformer_model = TransformerEncoder()
                 mlp_model = MLP(input_shape=(emb_dim,), dims=mlp_dims).cuda()
@@ -253,6 +256,7 @@ if __name__ == "__main__":
 
                 full_Model = full_model(
                     CNN_model,
+                    CNN_model_parameter,
                     pos_emb_model,
                     transformer_model,
                     mlp_model,
@@ -263,6 +267,7 @@ if __name__ == "__main__":
                 optimizer = torch.optim.Adam(
                     [
                         {"params": CNN_model.parameters()},
+                        {"params": CNN_model_parameter.parameters()},
                         {"params": transformer_model.parameters()},
                         {"params": mlp_model.parameters()},
                         {"params": mdn_model.parameters()},
@@ -290,6 +295,6 @@ if __name__ == "__main__":
                     full_data,
                     optimizer,
                     hyper_param,
-                    experiment_name="input [vel, lowfreq_vel, Pd, CAV, TP]",
-                    run_name="20241009 test",
+                    experiment_name="New CNN input [vel, lowfreq_vel, Pd, CAV, TP]",
+                    run_name=f"20241122 {model_index}model train",
                 )
