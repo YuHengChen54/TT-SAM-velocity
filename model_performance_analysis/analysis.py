@@ -389,8 +389,8 @@ class Intensity_Plotter:
         for i, label in zip(ticks[1:-1], intensity.label[1:-1]):
             ax.text(i, limits[0], label, va="bottom", fontsize=axis_fontsize - 7)
 
-        ax.set_xlabel(r"True PGV log(${m/s^2}$)", fontsize=axis_fontsize)
-        ax.set_ylabel(r"Predicted PGV log(${m/s^2}$)", fontsize=axis_fontsize)
+        ax.set_xlabel(r"True PGV log(${m/s}$)", fontsize=axis_fontsize)
+        ax.set_ylabel(r"Predicted PGV log(${m/s}$)", fontsize=axis_fontsize)
         if title == None:
             ax.set_title(f"Model prediction", fontsize=axis_fontsize + 5)
         else:
@@ -399,7 +399,6 @@ class Intensity_Plotter:
         ax.tick_params(axis="y", labelsize=axis_fontsize - 5)
         # ax.set_ylim(-3.5,1.5)
         # ax.set_xlim(-3.5,1.5)
-
 
         # return ax, cbar
         return fig, ax
