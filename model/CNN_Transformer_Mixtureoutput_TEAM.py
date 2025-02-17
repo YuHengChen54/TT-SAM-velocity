@@ -58,7 +58,7 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         activation=nn.ReLU(),
         downsample=1,
         mlp_input=11665,
-        mlp_dims=(500, 300, 200, 100),
+        mlp_dims=(500, 300, 200, 150),
         eps=1e-8,
     ):
         super(CNN, self).__init__()
@@ -89,12 +89,14 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
             / 100
         )
         self.unsqueeze_layer2 = LambdaLayer(lambda t: torch.unsqueeze(t, dim=1))
+
         self.conv2d1 = nn.Sequential(
             nn.Conv2d(1, 8, kernel_size=(1, downsample), stride=(1, downsample)),
             nn.ReLU(),  # 用self.activation會有兩個ReLU
         )
+
         self.conv2d2 = nn.Sequential(
-            nn.Conv2d(8, 32, kernel_size=(16, 2), stride=(1, 2)), nn.ReLU()
+            nn.Conv2d(8, 32, kernel_size=(16, 3), stride=(1, 3)), nn.ReLU()
         )
 
         self.conv1d1 = nn.Sequential(nn.Conv1d(32, 64, kernel_size=16), nn.ReLU())
@@ -107,7 +109,7 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         self.mlp = MLP((self.mlp_input,), dims=self.mlp_dims)
 
     def forward(self, x):
-        # print("intitial shape", x.size())
+        print("intitial shape", x.size())
         output = self.lambda_layer_1(x)
         output = self.unsqueeze_layer1(output)
 
@@ -116,7 +118,20 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         scale = self.unsqueeze_layer2(scale)
         # print("scale after:", scale.size())
 
-        output = self.conv2d1(output)
+        # 拆分 Channel
+        output_1_6 = output[:, :, :, :6]  # 取前 6 個 channel
+        output_7 = output[:, :, :, 6:]  # 取第 7 個 channel
+
+        output_1_6 = self.conv2d1(output_1_6)  # Shape: [batch, 8, height, new_width]
+
+        # 讓 output_7 擴展到 8 個通道，匹配 output_1_6
+        output_7 = output_7.repeat(1, 8, 1, 1)  # Shape: [batch, 8, height, width]
+
+        # 在通道維度上拼接
+        output = torch.cat(
+            (output_1_6, output_7), dim=-1
+        )  # Shape: [batch, 8, height, 3]
+
         output = self.conv2d2(output)
         # print(output.shape)
         output = torch.squeeze(output, dim=-1)
@@ -128,106 +143,6 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         output = self.maxpooling(output)
         output = self.conv1d4(output)
         output = self.conv1d5(output)
-        output = torch.flatten(output, start_dim=1)
-        # print("scale:", scale.size())
-        output = torch.cat((output, scale), dim=1)
-        # print(output.size()[-1])
-        output = self.mlp(output)
-        # print("output:", output.size())
-        return output
-
-
-class CNN_parameter(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
-    def __init__(
-        self,
-        input_shape=(-1, 6000, 3),
-        activation=nn.ReLU(),
-        downsample=1,
-        mlp_input=11665,
-        mlp_dims=(500, 300, 200, 50),
-        eps=1e-8,
-    ):
-        super(CNN_parameter, self).__init__()
-        self.input_shape = input_shape
-        self.activation = activation
-        self.downsample = downsample
-        self.mlp_input = mlp_input
-        self.mlp_dims = mlp_dims
-        self.eps = eps
-
-        self.lambda_layer_1 = LambdaLayer(
-            lambda t: t
-            / (
-                torch.max(
-                    torch.max(torch.abs(t), dim=1, keepdim=True).values,
-                    dim=2,
-                    keepdim=True,
-                ).values
-                + self.eps
-            )
-        )
-        self.unsqueeze_layer1 = LambdaLayer(lambda t: torch.unsqueeze(t, dim=1))
-        self.lambda_layer_2 = LambdaLayer(
-            lambda t: torch.log(
-                torch.max(torch.max(torch.abs(t), dim=1).values, dim=1).values
-                + self.eps
-            )
-            / 100
-        )
-        self.unsqueeze_layer2 = LambdaLayer(lambda t: torch.unsqueeze(t, dim=1))
-
-        self.conv2d1 = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=(16, 1), stride=(1, 1)),
-            nn.ReLU(),  # 用self.activation會有兩個ReLU
-        )
-        self.conv2d2 = nn.Sequential(
-            nn.Conv2d(8, 32, kernel_size=(16, 1), stride=(1, 1)), nn.ReLU()
-        )
-        self.maxpool2d = nn.MaxPool2d((2, 1))
-        self.conv2d3 = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=(16, 1), stride=(1, 1)), nn.ReLU()
-        )
-
-        self.conv2d4 = nn.Sequential(
-            nn.Conv2d(64, 128, kernel_size=(8, 1), stride=(1, 1)), nn.ReLU()
-        )
-
-        self.conv2d5 = nn.Sequential(
-            nn.Conv2d(128, 32, kernel_size=(8, 1), stride=(1, 1)), nn.ReLU()
-        )
-
-        self.conv2d6 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=(4, 1), stride=(1, 1)), nn.ReLU()
-        )
-
-        self.conv2d7 = nn.Sequential(
-            nn.Conv2d(32, 16, kernel_size=(1, 3), stride=(1, 3)), nn.ReLU()
-        )
-
-        self.mlp = MLP((self.mlp_input,), dims=self.mlp_dims)
-
-    def forward(self, x):
-        # print("intitial shape", x.size())
-        output = self.lambda_layer_1(x)
-        output = self.unsqueeze_layer1(output)
-
-        scale = self.lambda_layer_2(x)
-        # print("scale before:", scale.size())
-        scale = self.unsqueeze_layer2(scale)
-        # print("scale after:", scale.size())
-
-        output = self.conv2d1(output)
-        # print(output.shape)
-        output = self.conv2d2(output)
-        output = self.maxpool2d(output)
-        output = self.conv2d3(output)
-        output = self.maxpool2d(output)
-        output = self.conv2d4(output)
-        output = self.maxpool2d(output)
-        output = self.conv2d5(output)
-        output = self.conv2d6(output)
-        output = self.conv2d7(output)
-        output = torch.squeeze(output, dim=-1)
         output = torch.flatten(output, start_dim=1)
         # print("scale:", scale.size())
         output = torch.cat((output, scale), dim=1)
@@ -339,7 +254,7 @@ class PositionEmbedding(
         self,
         wavelengths=((5, 30), (110, 123), (0.01, 5000)),
         emb_dim=500,
-        **kwargs,
+        **kwargs
         # self, wavelengths=((21, 26), (119, 123), (0.01, 4000)), emb_dim=500, **kwargs
     ):
         super(PositionEmbedding, self).__init__(**kwargs)
@@ -435,7 +350,7 @@ class PositionEmbedding_Vs30(
         self,
         wavelengths=((5, 30), (110, 123), (0.01, 5000), (100, 1600)),
         emb_dim=500,
-        **kwargs,
+        **kwargs
         # self, wavelengths=((21, 26), (119, 123), (0.01, 4000)), emb_dim=500, **kwargs
     ):
         super(PositionEmbedding_Vs30, self).__init__(**kwargs)
@@ -592,58 +507,35 @@ class full_model(nn.Module):
     def __init__(
         self,
         model_CNN,
-        model_CNN_parameter,
         model_Position,
         model_Transformer,
         model_mlp,
         model_MDN,
         max_station=25,
         pga_targets=15,
-        cnn_dim=100,
-        cnn_para_dim=50,
         emb_dim=150,
         data_length=6000,
     ):
         super(full_model, self).__init__()
         self.data_length = data_length
         self.model_CNN = model_CNN
-        self.model_CNN_parameter = model_CNN_parameter
         self.model_Position = model_Position
         self.model_Transformer = model_Transformer
         self.model_mlp = model_mlp
         self.model_MDN = model_MDN
         self.max_station = max_station
         self.pga_targets = pga_targets
-        self.cnn_dim = cnn_dim
-        self.cnn_para_dim = cnn_para_dim
         self.emb_dim = emb_dim
 
     def forward(self, data):
         CNN_output = self.model_CNN(
-            torch.DoubleTensor(
-                data["waveform"].reshape(-1, self.data_length, 9)[:, :, :6]
-            )
+            torch.DoubleTensor(data["waveform"].reshape(-1, self.data_length, 7))
             .float()
             .cuda()
         )
         CNN_output_reshape = torch.reshape(
-            CNN_output, (-1, self.max_station, self.cnn_dim)
+            CNN_output, (-1, self.max_station, self.emb_dim)
         )
-
-        CNN_parameter_output = self.model_CNN_parameter(
-            torch.DoubleTensor(
-                data["waveform"].reshape(-1, self.data_length, 9)[:, :, 6:]
-            )
-            .float()
-            .cuda()
-        )
-        CNN_parameter_output_reshape = torch.reshape(
-            CNN_parameter_output, (-1, self.max_station, self.cnn_para_dim)
-        )
-        CNN_concat = torch.cat(
-            (CNN_output_reshape, CNN_parameter_output_reshape), dim=-1
-        )
-
         emb_output = self.model_Position(
             torch.DoubleTensor(data["sta"].reshape(-1, 1, data["sta"].shape[2]))
             .float()
@@ -670,7 +562,7 @@ class full_model(nn.Module):
         # concat two mask, [batchsize, station_number+PGA_target (40)], value: True, False (True: should mask)
         pad_mask = torch.cat((station_pad_mask, target_pad_mask), dim=1).cuda()
 
-        add_PE_CNNoutput = torch.add(CNN_concat, emb_output)
+        add_PE_CNNoutput = torch.add(CNN_output_reshape, emb_output)
         transformer_input = torch.cat((add_PE_CNNoutput, pga_pos_emb_output), dim=1)
         transformer_output = self.model_Transformer(transformer_input, pad_mask)
 

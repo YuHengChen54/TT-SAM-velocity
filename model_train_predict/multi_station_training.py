@@ -12,7 +12,6 @@ import sys
 sys.path.append("..")
 from model.CNN_Transformer_Mixtureoutput_TEAM import (
     CNN,
-    CNN_parameter,
     MDN,
     MLP,
     PositionEmbedding_Vs30,  # if you don't have vs30 data, please use "PositionEmbedding"
@@ -228,12 +227,12 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 30
+    model_index = 33
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
         for LR in [2.5e-5]:
-            for i in range(5):  # 原本是3
+            for i in range(3):  # 原本是3
                 model_index += 1
                 hyper_param = {
                     "model_index": model_index,
@@ -248,7 +247,6 @@ if __name__ == "__main__":
                 mlp_dims = (150, 100, 50, 30, 10)
 
                 CNN_model = CNN(downsample=3, mlp_input=7665).cuda()
-                CNN_model_parameter = CNN_parameter(mlp_input=7665).cuda()
                 pos_emb_model = PositionEmbedding_Vs30(emb_dim=emb_dim).cuda()
                 transformer_model = TransformerEncoder()
                 mlp_model = MLP(input_shape=(emb_dim,), dims=mlp_dims).cuda()
@@ -256,7 +254,6 @@ if __name__ == "__main__":
 
                 full_Model = full_model(
                     CNN_model,
-                    CNN_model_parameter,
                     pos_emb_model,
                     transformer_model,
                     mlp_model,
@@ -267,7 +264,6 @@ if __name__ == "__main__":
                 optimizer = torch.optim.Adam(
                     [
                         {"params": CNN_model.parameters()},
-                        {"params": CNN_model_parameter.parameters()},
                         {"params": transformer_model.parameters()},
                         {"params": mlp_model.parameters()},
                         {"params": mdn_model.parameters()},
@@ -295,6 +291,6 @@ if __name__ == "__main__":
                     full_data,
                     optimizer,
                     hyper_param,
-                    experiment_name="New CNN input [vel, lowfreq_vel, Pd, CAV, TP]",
-                    run_name=f"20241122 {model_index}model train",
+                    experiment_name="input [vel, lowfreq, CAV]",
+                    run_name=f"20250217 {model_index}model train",
                 )
