@@ -30,6 +30,16 @@ class Precision_Recall_Factory:
             if value < threshold:
                 return intensity[i]
         return intensity[-1]
+    
+    def pgv_to_intensity(value):
+        pgv_threshold = np.log10(
+            [0.002, 0.007, 0.019, 0.057, 0.15, 0.3, 0.5, 0.8, 1.4, 10]
+        )
+        intensity = ["0", "1", "2", "3", "4", "5-", "5+", "6-", "6+", "7"]
+        for i, threshold in enumerate(pgv_threshold):
+            if value < threshold:
+                return intensity[i]
+        return intensity[-1]
 
     def plot_intensity_confusion_matrix(
         intensity_confusion_matrix,

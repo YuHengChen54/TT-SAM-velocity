@@ -109,7 +109,7 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         self.mlp = MLP((self.mlp_input,), dims=self.mlp_dims)
 
     def forward(self, x):
-        print("intitial shape", x.size())
+        # print("intitial shape", x.size())
         output = self.lambda_layer_1(x)
         output = self.unsqueeze_layer1(output)
 
@@ -590,3 +590,5 @@ def mdn_loss_fn(pi, sigma, mu, y):
     # print(result.shape)
     result = -torch.log(result)
     return torch.mean(result)
+
+

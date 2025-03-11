@@ -12,7 +12,6 @@ import sys
 sys.path.append("..")
 from model.CNN_Transformer_Mixtureoutput_TEAM import (
     CNN,
-    CNN_parameter, 
     MDN,
     MLP,
     PositionEmbedding_Vs30,
@@ -37,20 +36,18 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
     )
     # ===========predict==============
     device = torch.device("cuda")
-    for num in [24]:
+    for num in [31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]:
         path = f"../model/model{num}_vel.pt"
         # path = "../model/model19_checkpoints/epoch70_model.pt"
         emb_dim = 150
         mlp_dims = (150, 100, 50, 30, 10)
         CNN_model = CNN(downsample=3, mlp_input=7665).cuda()
-        CNN_model_parameter = CNN_parameter(mlp_input=7665).cuda()
         pos_emb_model = PositionEmbedding_Vs30(emb_dim=emb_dim).cuda()
         transformer_model = TransformerEncoder()
         mlp_model = MLP(input_shape=(emb_dim,), dims=mlp_dims).cuda()
         mdn_model = MDN(input_shape=(mlp_dims[-1],)).cuda()
         full_Model = full_model(
             CNN_model,
-            CNN_model_parameter, 
             pos_emb_model,
             transformer_model,
             mlp_model,

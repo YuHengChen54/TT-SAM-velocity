@@ -227,7 +227,7 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 33
+    model_index = 42
     num_epochs = 300
     # batch_size=16
     for batch_size in [16]:
@@ -292,5 +292,5 @@ if __name__ == "__main__":
                     optimizer,
                     hyper_param,
                     experiment_name="input [vel, lowfreq, CAV]",
-                    run_name=f"20250217 {model_index}model train",
+                    run_name=f"20250220 {model_index}model train",
                 )
