@@ -172,20 +172,23 @@ ax1.hist(
     [trace_data.query("year==2016")["pgv"], trace_data.query("year!=2016")["pgv"]],
     bins=30,
     edgecolor="black",
+    color=["peru", "tab:blue"], 
     stacked=True,
     label=["test", "train"],
 )
 for i in range(len(pgv_threshold) - 1):
     ax1.text((pgv_threshold[i] + pgv_threshold[i + 1]) / 2, 35000, label[i])
-ax1.legend(loc="upper left")
+handles, labels = fig.gca().get_legend_handles_labels()
+ax1.legend(handles[::-1], labels[::-1], loc="upper left")
 ax1.vlines(pgv_threshold, 0, 40000, linestyles="dotted", color="k")
-ax1.set_title("Delete station less than 25", fontsize=20)
+# ax1.set_title("Delete station less than 25", fontsize=20)
 # ax1.set_title("Mag + Bias Data", fontsize=20)
 ax1.set_xlabel("PGV log(m/s)", fontsize=20)
 ax1.set_ylabel("Number of Traces", fontsize=20)
 ax1.set_yscale("log")
 ax1.set_ylim(0, 100000)
 ax1.set_xlim(-4, 0.5)
+fig.savefig("pgv_distribution.png", dpi=400)
 
 # 看PGV隨測站距離的分布
 # eq_id = "25480"
