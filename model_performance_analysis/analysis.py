@@ -16,6 +16,7 @@ import os
 from scipy.stats import norm
 import bisect
 import pandas as pd
+from matplotlib.patches import Rectangle
 import matplotlib.patheffects as path_effects
 import math
 
@@ -62,13 +63,15 @@ class Precision_Recall_Factory:
             cmap="Reds",
             cbar=True,
             cbar_kws={"label": "number of traces"},
+            square=True
         )  # font size
+        ax.invert_yaxis()
         for i in range(len(intensity)):
             ax.add_patch(
                 plt.Rectangle((i, i), 1, 1, fill=False, edgecolor="gray", lw=2)
             )
-        ax.set_xlabel("Predicted intensity", fontsize=18)
-        ax.set_ylabel("Actual intensity", fontsize=18)
+        ax.set_xlabel("True intensity", fontsize=18)
+        ax.set_ylabel("Predicted intensity", fontsize=18)
         if intensity_score:
             ax.set_title(
                 f"{mask_after_sec} sec intensity confusion matrix, intensity score: {np.round(intensity_score,3)}"
@@ -324,34 +327,21 @@ class Intensity_Plotter:
     def plot_true_predicted(
         y_true,
         y_pred,
-        agg="mean",
-        quantile=True,
-        ms=None,
+        agg="point",
         ax=None,
         axis_fontsize=20,
         point_size=2,
-        target="pga",
+        target="pgv",
         title=None,
     ):
+
         if ax is None:
             fig = plt.figure(figsize=(10, 10))
             ax = fig.add_subplot(111)
-        ax.set_aspect("equal")
-
-        if quantile:
-            c_quantile = np.sum(
-                y_pred[:, :, 0]
-                * (
-                    1
-                    - norm.cdf(
-                        (y_true.reshape(-1, 1) - y_pred[:, :, 1]) / y_pred[:, :, 2]
-                    )
-                ),
-                axis=-1,
-                keepdims=False,
-            )
         else:
-            c_quantile = None
+            fig = ax.figure
+
+        ax.set_aspect("equal")
 
         if agg == "mean":
             y_pred_point = np.sum(y_pred[:, :, 0] * y_pred[:, :, 1], axis=1)
@@ -360,23 +350,6 @@ class Intensity_Plotter:
         else:
             raise ValueError(f'Aggregation type "{agg}" unknown')
 
-        limits = (np.min(y_true) - 0.5, np.max(y_true) + 0.5)
-        ax.plot(limits, limits, "k-", zorder=1)
-        if ms is None:
-            cbar = ax.scatter(
-                y_true,
-                y_pred_point,
-                c=c_quantile,
-                cmap="coolwarm",
-                zorder=2,
-                alpha=0.3,
-                s=point_size,
-            )
-        else:
-            cbar = ax.scatter(
-                y_true, y_pred_point, s=ms, c=c_quantile, cmap="coolwarm", zorder=2
-            )
-
         intensity = TaiwanIntensity()
         if target == "pga":
             intensity_threshold = intensity.pga
@@ -384,33 +357,97 @@ class Intensity_Plotter:
         elif target == "pgv":
             intensity_threshold = intensity.pgv
             ticks = intensity.pgv_ticks
-        ax.hlines(
-            intensity_threshold[2:-1],
-            limits[0],
-            intensity_threshold[2:-1],
-            linestyles="dotted",
-        )
-        ax.vlines(
-            intensity_threshold[2:-1],
-            limits[0],
-            intensity_threshold[2:-1],
-            linestyles="dotted",
-        )
-        for i, label in zip(ticks[1:-1], intensity.label[1:-1]):
-            ax.text(i, limits[0], label, va="bottom", fontsize=axis_fontsize - 7)
 
-        ax.set_xlabel(r"True PGV log(${m/s}$)", fontsize=axis_fontsize)
-        ax.set_ylabel(r"Predicted PGV log(${m/s}$)", fontsize=axis_fontsize)
-        if title == None:
-            ax.set_title(f"Model prediction", fontsize=axis_fontsize + 5)
+        labels = intensity.label
+        
+        intensity_threshold[0] = np.log10(0.002) - (np.log10(0.002) + 5) / 2
+
+        limits = (intensity_threshold[0], intensity_threshold[-1])
+
+        # 繪製網格背景著色 (更淡的色)
+        for i in range(len(intensity_threshold) - 1):
+            for j in range(len(intensity_threshold) - 1):
+                x_min, x_max = intensity_threshold[i], intensity_threshold[i + 1]
+                y_min, y_max = intensity_threshold[j], intensity_threshold[j + 1]
+                rect_color = "#eaffea"  # 預設更淡的綠色
+                if abs(i - j) == 0:
+                    rect_color = "#eaffea"  # 完全正確，淡綠
+                elif abs(i - j) == 1:
+                    rect_color = "#eaffea"  # +-1級內，淡綠
+                elif j > i:
+                    rect_color = "#ffecec"  # 高估，淡紅
+                elif j < i:
+                    rect_color = "#eef7ff"  # 低估，淡藍
+
+                ax.add_patch(
+                    Rectangle(
+                        (x_min, y_min),
+                        x_max - x_min,
+                        y_max - y_min,
+                        color=rect_color,
+                        zorder=0
+                    )
+                )
+
+        # 畫資料點（固定顏色）
+        ax.scatter(
+            y_true,
+            y_pred_point,
+            c="k",
+            zorder=2,
+            alpha=0.4,
+            s=point_size
+        )
+
+        # 畫45度參考線
+        ax.plot(limits, limits, "k-", linewidth=1, zorder=3)
+
+        # 重劃虛線格線
+        for t in intensity_threshold:
+            ax.plot([t, t], limits, linestyle='dotted', color='grey', linewidth=1, zorder=4)
+            ax.plot(limits, [t, t], linestyle='dotted', color='grey', linewidth=1, zorder=4)
+
+        # 放置震度級數文字
+        # 水平震度標籤（放上方）
+        label_y_pos = limits[1] 
+        for i, label in enumerate(labels[:-1]):
+            center_x = (intensity_threshold[i] + intensity_threshold[i + 1]) / 2
+            ax.text(center_x, label_y_pos, label, ha="center", va="bottom", fontsize=axis_fontsize-5, zorder=5)
+
+        # 垂直震度標籤（放右側）
+        label_x_pos = limits[1] +0.02
+        for i, label in enumerate(labels[:-1]):
+            center_y = (intensity_threshold[i] + intensity_threshold[i + 1]) / 2
+            ax.text(label_x_pos, center_y, label, ha="left", va="center", fontsize=axis_fontsize-5, zorder=5)
+
+        # 計算R2值，放在圖的左上角
+        r2 = metrics.r2_score(y_true, y_pred_point)
+        ax.text(
+            limits[0] + 0.085,
+            limits[-1] - 0.08,
+            f"$R^2={r2:.2f}$",
+            va="top",
+            fontsize=axis_fontsize - 4,
+        )
+
+        ax.set_xlim(limits)
+        ax.set_ylim(limits)
+
+        ax.set_xticks(intensity_threshold)
+        ax.set_xticklabels([str(round(10**v, 3)) for v in intensity_threshold], fontsize=axis_fontsize - 7)
+        ax.set_yticks(intensity_threshold)
+        ax.set_yticklabels([str(round(10**v, 3)) for v in intensity_threshold], fontsize = axis_fontsize - 7)
+        ax.set_clip_on(True)
+
+
+        if title is None:
+            ax.set_title("Model prediction", fontsize=axis_fontsize + 5, pad=40)
         else:
-            ax.set_title(title, fontsize=axis_fontsize + 5)
-        ax.tick_params(axis="x", labelsize=axis_fontsize - 5)
-        ax.tick_params(axis="y", labelsize=axis_fontsize - 5)
-        # ax.set_ylim(-3.5,1.5)
-        # ax.set_xlim(-3.5,1.5)
+            ax.set_title(title, fontsize=axis_fontsize + 5, pad=40)
 
-        # return ax, cbar
+        ax.set_xlabel(r"True PGV (${m/s}$)", fontsize=axis_fontsize)
+        ax.set_ylabel(r"Predicted PGV (${m/s}$)", fontsize=axis_fontsize)
+
         return fig, ax
 
     def plot_CWA_EEW_intensity_map(

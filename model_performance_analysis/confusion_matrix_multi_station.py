@@ -55,7 +55,7 @@ for mask_after_sec in [3, 5, 7, 10, 15]:
     # )
     # plot intensity score confusion matrix
     intensity_confusion_matrix = confusion_matrix(
-        data["answer_intensity"], data["predicted_intensity"], labels=intensity
+        data["predicted_intensity"], data["answer_intensity"], labels=intensity
     )
     fig,ax=Precision_Recall_Factory.plot_intensity_confusion_matrix(intensity_confusion_matrix,intensity_score,mask_after_sec,output_path=f"../predict/model_{model_num}_analysis")
 

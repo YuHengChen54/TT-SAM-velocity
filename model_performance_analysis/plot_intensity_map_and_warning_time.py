@@ -55,9 +55,8 @@ for EQ_ID in [24784, 25900]:
     fig, ax = Intensity_Plotter.plot_true_predicted(
         y_true=event_prediction["answer"],
         y_pred=event_prediction["predict"],
-        quantile=False,
         agg="point",
-        point_size=70,
+        point_size=35,
         target=label_type,
         title=f"EQID: {EQ_ID}, mag: {event['magnitude'].values[0]}, {mask_after_sec} sec true and predict",
     )
