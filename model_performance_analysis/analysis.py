@@ -44,7 +44,8 @@ class Precision_Recall_Factory:
 
     def plot_intensity_confusion_matrix(
         intensity_confusion_matrix,
-        intensity_score=None,
+        strict_score=None,
+        loose_score=None, 
         mask_after_sec=None,
         title=None,
         output_path=None,
@@ -72,9 +73,9 @@ class Precision_Recall_Factory:
             )
         ax.set_xlabel("True intensity", fontsize=18)
         ax.set_ylabel("Predicted intensity", fontsize=18)
-        if intensity_score:
+        if strict_score or loose_score:
             ax.set_title(
-                f"{mask_after_sec} sec intensity confusion matrix, intensity score: {np.round(intensity_score,3)}"
+                f"{mask_after_sec} sec intensity confusion matrix\nintensity score: {np.round(strict_score,3)}, loose correct score: {np.round(loose_score,3)}"
             )
         if title:
             ax.set_title(title)
@@ -94,19 +95,45 @@ class Precision_Recall_Factory:
         mask_after_sec,
         output_path=None,
     ):
-        ax.plot(
-            100 * (10**score_curve_threshold),
-            performance_score[f"{score_type}"],
-            label=f"{mask_after_sec} sec",
+
+        sn.set_theme(style="white")
+
+        x_vals = 100 * (10**score_curve_threshold)  # PGV in cm/s
+        y_vals = performance_score[f"{score_type}"]
+
+        # 找 0.019 和 0.057 的 index 和 y 值
+        x_019 = 100 * 0.019
+        x_057 = 100 * 0.057
+        x_019 = 100 * 0.019
+        x_057 = 100 * 0.057
+        score_019 = np.interp(x_019, x_vals, y_vals)
+        score_057 = np.interp(x_057, x_vals, y_vals)
+
+        # 在 label 中加入 score 資訊
+        label_str = (
+            f"{mask_after_sec} sec (III : {score_019:.2f}, IV : {score_057:.2f})"
         )
-        ax.set_xlabel(r"PGA threshold (${cm/s^2}$)", fontsize=15)
-        ax.set_ylabel("score", fontsize=15)
-        ax.set_title(f"{score_type} curve", fontsize=22)
+
+        ax.plot(x_vals, y_vals, linewidth=2,  label=label_str)
+
+        # 標準圖表設定
+        ax.set_xlabel(r"PGV threshold (${cm/s}$)", fontsize=20)
+        ax.set_ylabel("score", fontsize=20)
+        ax.set_title(f"{score_type} curve", fontsize=22, pad=30)
         ax.set_ylim(0, 1.1)
-        ax.legend()
+        ax.set_xlim(0, x_vals.max())
+        ax.legend(loc="lower left")
+
+        # ➤ 畫上虛線（選擇保留）
+        for mark_x, label in zip([x_019, x_057], ["III", "IV"]):
+            ax.axvline(x=mark_x, linestyle="dotted", color="grey", linewidth=1)
+            ax.text(mark_x, 1.1, label, ha="center", va="bottom", fontsize=15, zorder=5)
+
         if output_path:
             fig.savefig(f"{output_path}/{score_type}_curve.png", dpi=300)
+
         return fig, ax
+
 
 
 class TaiwanIntensity:
