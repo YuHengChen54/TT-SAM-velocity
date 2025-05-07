@@ -122,45 +122,46 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
         # output_df = pd.read_csv(f"../predict/model_3_analysis(velocity)/model 3 {mask_after_sec} sec prediction_vel.csv")
 
         fig, ax = Intensity_Plotter.plot_true_predicted(
-            y_true=output_df["answer"][output_df["answer"] < np.log10(0.057)],
-            y_pred=output_df["predict"][output_df["answer"] < np.log10(0.057)],
-            quantile=False,
+            y_true=output_df["answer"],
+            y_pred=output_df["predict"],
             agg="point",
             point_size=12,
             target=label,
+            title=f"{mask_after_sec}s True Predict Plot, 2016 data model {num}"
         )
 
-        ax.scatter(
-            output_df["answer"][output_df["answer"] >= np.log10(0.057)],
-            output_df["predict"][output_df["answer"] >= np.log10(0.057)],
-            c="orange",
-            s=12
+        # 用震度4分割畫不同顏色
+        # ax.scatter(
+        #     output_df["answer"][output_df["answer"] >= np.log10(0.057)],
+        #     output_df["predict"][output_df["answer"] >= np.log10(0.057)],
+        #     c="orange",
+        #     s=12
         
-        ) 
+        # ) 
 
-        r2_greater4 = metrics.r2_score(output_df["answer"][output_df["answer"] >= np.log10(0.057)], output_df["predict"][output_df["answer"] >= np.log10(0.057)])
-        r2 = metrics.r2_score(output_df["answer"], output_df["predict"])
+        # r2_greater4 = metrics.r2_score(output_df["answer"][output_df["answer"] >= np.log10(0.057)], output_df["predict"][output_df["answer"] >= np.log10(0.057)])
+        # r2 = metrics.r2_score(output_df["answer"], output_df["predict"])
 
-        limits = (np.min(output_df["answer"]) - 0.5, np.max(output_df["answer"])-0.5)
-        ax.text(
-            min(np.min(output_df["answer"]), limits[0]),
-            max(np.max(output_df["answer"]), limits[1])-0.5,
-            f"$R^2={r2:.2f}$",
-            fontweight=1000, 
-            va="top",
-            fontsize=15,
-            color="dodgerblue", 
+        # limits = (np.min(output_df["answer"]) - 0.5, np.max(output_df["answer"])-0.5)
+        # ax.text(
+        #     min(np.min(output_df["answer"]), limits[0]),
+        #     max(np.max(output_df["answer"]), limits[1])-0.5,
+        #     f"$R^2={r2:.2f}$",
+        #     fontweight=1000, 
+        #     va="top",
+        #     fontsize=15,
+        #     color="dodgerblue", 
             
-        )
-        ax.text(
-            min(np.min(output_df["answer"]), limits[0])+0.7, 
-            max(np.max(output_df["answer"]), limits[1])-0.5,
-            f"$R^2={r2_greater4:.2f}$",
-            fontweight=1000, 
-            va="top",
-            fontsize=15,
-            color="darkorange", 
-        )
+        # )
+        # ax.text(
+        #     min(np.min(output_df["answer"]), limits[0])+0.7, 
+        #     max(np.max(output_df["answer"]), limits[1])-0.5,
+        #     f"$R^2={r2_greater4:.2f}$",
+        #     fontweight=1000, 
+        #     va="top",
+        #     fontsize=15,
+        #     color="darkorange", 
+        # )
         # eq_id = 24784
         # ax.scatter(
         # output_df["answer"][output_df["EQ_ID"] == eq_id],
@@ -171,10 +172,10 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
         # magnitude = data.event_metadata[data.event_metadata["EQ_ID"] == eq_id][
         #     "magnitude"
         # ].values[0]
-        ax.set_title(
-            f"{mask_after_sec}s True Predict Plot, 2016 data model{num}",
-            fontsize=20,
-        )
+        # ax.set_title(
+        #     f"{mask_after_sec}s True Predict Plot, 2016 data model{num}",
+        #     fontsize=20,
+        # )
 
         fig.savefig(f"../predict/model {num} {mask_after_sec} sec_vel.png")
 

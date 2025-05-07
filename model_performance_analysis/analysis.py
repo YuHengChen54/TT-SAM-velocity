@@ -52,7 +52,7 @@ class Precision_Recall_Factory:
     ):
         intensity = ["0", "1", "2", "3", "4", "5-", "5+", "6-", "6+", "7"]
         sn.set(rc={"figure.figsize": (8, 8)}, font_scale=1.2)  # for label size
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(dpi=350)
         sn.heatmap(
             intensity_confusion_matrix,
             ax=ax,
@@ -109,12 +109,8 @@ class Precision_Recall_Factory:
         score_019 = np.interp(x_019, x_vals, y_vals)
         score_057 = np.interp(x_057, x_vals, y_vals)
 
-        # 在 label 中加入 score 資訊
-        label_str = (
-            f"{mask_after_sec} sec (III : {score_019:.2f}, IV : {score_057:.2f})"
-        )
-
-        ax.plot(x_vals, y_vals, linewidth=2,  label=label_str)
+        print(f"{mask_after_sec} sec: {score_type}(III: {score_019:.2f}, IV: {score_057:.2f})")
+        ax.plot(x_vals, y_vals, linewidth=4,  label=f"{mask_after_sec} sec")
 
         # 標準圖表設定
         ax.set_xlabel(r"PGV threshold (${cm/s}$)", fontsize=20)
@@ -122,7 +118,7 @@ class Precision_Recall_Factory:
         ax.set_title(f"{score_type} curve", fontsize=22, pad=30)
         ax.set_ylim(0, 1.1)
         ax.set_xlim(0, x_vals.max())
-        ax.legend(loc="lower left")
+        # ax.legend(loc="lower left")
 
         # ➤ 畫上虛線（選擇保留）
         for mark_x, label in zip([x_019, x_057], ["III", "IV"]):
@@ -363,7 +359,7 @@ class Intensity_Plotter:
     ):
 
         if ax is None:
-            fig = plt.figure(figsize=(10, 10))
+            fig = plt.figure(figsize=(10, 10), dpi=400)
             ax = fig.add_subplot(111)
         else:
             fig = ax.figure
