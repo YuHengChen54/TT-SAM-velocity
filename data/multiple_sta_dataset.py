@@ -210,17 +210,6 @@ class multiple_station_dataset(Dataset):
         ok_event_id = np.intersect1d(
             np.array(event_metadata["EQ_ID"].values), ok_events_index
         )
-        # print(ok_event_id)
-        # print(len(ok_event_id))
-        ok_event_id = list(ok_event_id)
-        # print(trace_metadata)
-        for event in range(len(ok_event_id) - 1, -1, -1):
-            filter_id = trace_metadata["EQ_ID"] == ok_event_id[event]
-            if len(trace_metadata[filter_id]) <= 50:
-                del ok_event_id[event]
-        ok_event_id = np.array(ok_event_id)
-        # print(ok_event_id)
-        # print(len(ok_event_id))
         if oversample > 1:
             oversampled_catalog = []
             filter = event_metadata["magnitude"] >= oversample_mag
