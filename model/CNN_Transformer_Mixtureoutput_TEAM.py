@@ -118,20 +118,7 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         scale = self.unsqueeze_layer2(scale)
         # print("scale after:", scale.size())
 
-        # 拆分 Channel
-        output_1_6 = output[:, :, :, :6]  # 取前 6 個 channel
-        output_7 = output[:, :, :, 6:]  # 取第 7 個 channel
-
-        output_1_6 = self.conv2d1(output_1_6)  # Shape: [batch, 8, height, new_width]
-
-        # 讓 output_7 擴展到 8 個通道，匹配 output_1_6
-        output_7 = output_7.repeat(1, 8, 1, 1)  # Shape: [batch, 8, height, width]
-
-        # 在通道維度上拼接
-        output = torch.cat(
-            (output_1_6, output_7), dim=-1
-        )  # Shape: [batch, 8, height, 3]
-
+        output = self.conv2d1(output)
         output = self.conv2d2(output)
         # print(output.shape)
         output = torch.squeeze(output, dim=-1)
@@ -149,8 +136,8 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         # print(output.size()[-1])
         output = self.mlp(output)
         # print("output:", output.size())
-        return output
 
+        return output
 
 class CNN_feature_map(nn.Module):  # get cnn feature map to explain feature extraction
     def __init__(
@@ -529,7 +516,7 @@ class full_model(nn.Module):
 
     def forward(self, data):
         CNN_output = self.model_CNN(
-            torch.DoubleTensor(data["waveform"].reshape(-1, self.data_length, 7))
+            torch.DoubleTensor(data["waveform"].reshape(-1, self.data_length, 9))
             .float()
             .cuda()
         )

@@ -5,7 +5,7 @@ from analysis import Intensity_Plotter,Warning_Time_Plotter
 
 
 model_num = 24
-mask_after_sec = 13
+mask_after_sec = 3
 label_type = "pgv"
 if label_type == "pga":
     label_threshold = np.log10(0.25)
@@ -15,9 +15,9 @@ if label_type == "pgv":
     intensity = "III"
 
 path = f"../predict/model_{model_num}_analysis"
-# output_path = f"{path}/mag bigger 5.5 predict"
-# if not os.path.isdir(output_path):
-#     os.mkdir(output_path)
+output_path = f"{path}/events_analysis"
+if not os.path.isdir(output_path):
+    os.mkdir(output_path)
 Afile_path = "../data"
 
 catalog = pd.read_csv(f"{Afile_path}/1999_2019_final_catalog.csv")
@@ -49,9 +49,9 @@ for EQ_ID in [24784, 25900]:
         pad=100,
         title=f"{mask_after_sec} sec intensity Map",
     )
-    # fig.savefig(
-    #     f"../paper image/{EQ_ID}_{mask_after_sec}sec PGA intensity Map.png", dpi=600, bbox_inches="tight"
-    # )
+    fig.savefig(
+        f"{output_path}/{EQ_ID}_{mask_after_sec}sec PGA intensity Map.png", dpi=600, bbox_inches="tight"
+    )
     fig, ax = Intensity_Plotter.plot_true_predicted(
         y_true=event_prediction["answer"],
         y_pred=event_prediction["predict"],
@@ -60,9 +60,9 @@ for EQ_ID in [24784, 25900]:
         target=label_type,
         title=f"EQID: {EQ_ID}, mag: {event['magnitude'].values[0]}, {mask_after_sec} sec true and predict",
     )
-    # fig.savefig(
-    #     f"{output_path}/{EQ_ID}_mag_{event['magnitude'].values[0]}_{mask_after_sec}sec true predict plot.png", dpi=450, bbox_inches="tight"
-    # )
+    fig.savefig(
+        f"{output_path}/{EQ_ID}_mag_{event['magnitude'].values[0]}_{mask_after_sec}sec true predict plot.png", dpi=450, bbox_inches="tight"
+    )
     try:
         fig, ax = Warning_Time_Plotter.warning_map(
             trace_info=event_prediction,
@@ -74,16 +74,16 @@ for EQ_ID in [24784, 25900]:
             label_threshold=label_threshold,
         )
 
-        # fig.savefig(f"../paper image/{EQ_ID}_mag_{event['magnitude'].values[0]}_{mask_after_sec} sec warning map.png",
-        #             dpi=600)
+        fig.savefig(f"{output_path}/{EQ_ID}_mag_{event['magnitude'].values[0]}_{mask_after_sec} sec warning map.png",
+                    dpi=600)
         fig, ax = Warning_Time_Plotter.correct_warning_with_epidist(
             event_prediction=event_prediction,
             label_threshold=label_threshold,
             label_type=label_type,
             mask_after_sec=mask_after_sec,
         )
-        # fig.savefig(f"{output_path}/{EQ_ID}_mag_{event['magnitude'].values[0]}_{mask_after_sec} sec epidist vs time.png",
-        #             dpi=300)
+        fig.savefig(f"{output_path}/{EQ_ID}_mag_{event['magnitude'].values[0]}_{mask_after_sec} sec epidist vs time.png",
+                    dpi=300)
         fig, ax = Warning_Time_Plotter.warning_time_hist(
             event_prediction,
             catalog,
@@ -94,11 +94,11 @@ for EQ_ID in [24784, 25900]:
             label_type=label_type,
             bins=14,
         )
-        # fig.savefig(
-        #     f"{output_path}/{EQ_ID}_mag_{event['magnitude'].values[0]}_{mask_after_sec} sec warning stations hist.png",
-        #     dpi=300,
-        #     bbox_inches="tight",
-        # )
+        fig.savefig(
+            f"{output_path}/{EQ_ID}_mag_{event['magnitude'].values[0]}_{mask_after_sec} sec warning stations hist.png",
+            dpi=300,
+            bbox_inches="tight",
+        )
     except Exception as e:
         print(EQ_ID)
         continue

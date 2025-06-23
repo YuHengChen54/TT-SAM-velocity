@@ -95,38 +95,67 @@ class Precision_Recall_Factory:
         mask_after_sec,
         output_path=None,
     ):
+        sns.set_theme(style="white")
+        if score_type == "comprehensive":
+            sn.set_theme(style="white")
 
-        sn.set_theme(style="white")
+            x_vals = 100 * (10**score_curve_threshold)  # PGV in cm/s
+            precision_vals = performance_score["precision"]
+            recall_vals = performance_score["recall"]
+            F1_vals = performance_score["F1"]
 
-        x_vals = 100 * (10**score_curve_threshold)  # PGV in cm/s
-        y_vals = performance_score[f"{score_type}"]
+            ax.plot(x_vals, precision_vals, linewidth=4, label="Precision")
+            ax.plot(x_vals, recall_vals, linewidth=4, label="Recall")
+            ax.plot(x_vals, F1_vals, linewidth=4, label="F1")
 
-        # 找 0.019 和 0.057 的 index 和 y 值
-        x_019 = 100 * 0.019
-        x_057 = 100 * 0.057
-        x_019 = 100 * 0.019
-        x_057 = 100 * 0.057
-        score_019 = np.interp(x_019, x_vals, y_vals)
-        score_057 = np.interp(x_057, x_vals, y_vals)
+            # 標準圖表設定
+            ax.set_xlabel(r"PGV threshold (${cm/s}$)", fontsize=20)
+            ax.set_ylabel("score", fontsize=20)
+            ax.set_title("Comprehensive curve", fontsize=22, pad=30)
+            ax.set_ylim(0, 1.1)
+            ax.set_xlim(0, x_vals.max())
+            ax.legend()
 
-        print(f"{mask_after_sec} sec: {score_type}(III: {score_019:.2f}, IV: {score_057:.2f})")
-        ax.plot(x_vals, y_vals, linewidth=4,  label=f"{mask_after_sec} sec")
+            # ➤ 畫上虛線（選擇保留）
+            x_019 = 100 * 0.019
+            x_057 = 100 * 0.057
+            for mark_x, label in zip([x_019, x_057], ["III", "IV"]):
+                ax.axvline(x=mark_x, linestyle="dotted", color="grey", linewidth=1)
+                ax.text(mark_x, 1.1, label, ha="center", va="bottom", fontsize=15, zorder=5)
 
-        # 標準圖表設定
-        ax.set_xlabel(r"PGV threshold (${cm/s}$)", fontsize=20)
-        ax.set_ylabel("score", fontsize=20)
-        ax.set_title(f"{score_type} curve", fontsize=22, pad=30)
-        ax.set_ylim(0, 1.1)
-        ax.set_xlim(0, x_vals.max())
-        # ax.legend(loc="lower left")
+            if output_path:
+                fig.savefig(f"{output_path}/{score_type}_curve.png", dpi=300)
 
-        # ➤ 畫上虛線（選擇保留）
-        for mark_x, label in zip([x_019, x_057], ["III", "IV"]):
-            ax.axvline(x=mark_x, linestyle="dotted", color="grey", linewidth=1)
-            ax.text(mark_x, 1.1, label, ha="center", va="bottom", fontsize=15, zorder=5)
+        else:
+            sn.set_theme(style="white")
 
-        if output_path:
-            fig.savefig(f"{output_path}/{score_type}_curve.png", dpi=300)
+            x_vals = 100 * (10**score_curve_threshold)  # PGV in cm/s
+            y_vals = performance_score[f"{score_type}"]
+
+            # 找 0.019 和 0.057 的 index 和 y 值
+            x_019 = 100 * 0.019
+            x_057 = 100 * 0.057
+            score_019 = np.interp(x_019, x_vals, y_vals)
+            score_057 = np.interp(x_057, x_vals, y_vals)
+
+            print(f"{mask_after_sec} sec: {score_type}(III: {score_019:.2f}, IV: {score_057:.2f})")
+            ax.plot(x_vals, y_vals, linewidth=4,  label=f"{mask_after_sec} sec")
+
+            # 標準圖表設定
+            ax.set_xlabel(r"PGV threshold (${cm/s}$)", fontsize=20)
+            ax.set_ylabel("score", fontsize=20)
+            ax.set_title(f"{score_type} curve", fontsize=22, pad=30)
+            ax.set_ylim(0, 1.1)
+            ax.set_xlim(0, x_vals.max())
+            # ax.legend(loc="lower left")
+
+            # ➤ 畫上虛線（選擇保留）
+            for mark_x, label in zip([x_019, x_057], ["III", "IV"]):
+                ax.axvline(x=mark_x, linestyle="dotted", color="grey", linewidth=1)
+                ax.text(mark_x, 1.1, label, ha="center", va="bottom", fontsize=15, zorder=5)
+
+            if output_path:
+                fig.savefig(f"{output_path}/{score_type}_curve.png", dpi=300)
 
         return fig, ax
 
@@ -751,7 +780,7 @@ class Warning_Time_Plotter:
 
         title = f"{sec} second warning performance, warning threshold: {intensity}"
         src_crs = ccrs.PlateCarree()
-        fig, ax_map = plt.subplots(subplot_kw={"projection": src_crs}, figsize=(7, 7))
+        fig, ax_map = plt.subplots(subplot_kw={"projection": src_crs}, figsize=(7, 7), dpi=450)
 
         ax_map.coastlines("10m")
 
@@ -772,6 +801,9 @@ class Warning_Time_Plotter:
         warning_time = trace_info[true_warn_filter][
             f"{label_type}_time_window"
         ] / 200 - (sec + 5)
+
+        # cvals = [-1, 0, 40, 50]
+        # colors = ["purple", "white", "red", "red"]
 
         cvals = [0, warning_time.mean(), warning_time.max()]
         colors = ["white", "orange", "red"]
@@ -845,6 +877,8 @@ class Warning_Time_Plotter:
         geoms.append(sgeom.Polygon(cp))
 
         travel_time = (P_radius / 1000) / Pwave_vel
+        first_P_time = travel_time - sec
+        print(f"First P wave arrival time: {first_P_time}")
         S_radius = Swave_vel * travel_time * 1000
         cp = gd.circle(lon=event_lon, lat=event_lat, radius=S_radius)
         geoms.append(sgeom.Polygon(cp))
