@@ -89,6 +89,7 @@ class multiple_station_dataset(Dataset):
         limit=None,
         input_type="acc",
         label_key="pga",
+        physical_feature=None,
         mask_waveform_sec=None,
         mask_waveform_random=False,
         dowmsampling=False,
@@ -210,17 +211,6 @@ class multiple_station_dataset(Dataset):
         ok_event_id = np.intersect1d(
             np.array(event_metadata["EQ_ID"].values), ok_events_index
         )
-        # print(ok_event_id)
-        # print(len(ok_event_id))
-        ok_event_id = list(ok_event_id)
-        # print(trace_metadata)
-        for event in range(len(ok_event_id) - 1, -1, -1):
-            filter_id = trace_metadata["EQ_ID"] == ok_event_id[event]
-            if len(trace_metadata[filter_id]) <= 50:
-                del ok_event_id[event]
-        ok_event_id = np.array(ok_event_id)
-        # print(ok_event_id)
-        # print(len(ok_event_id))
         if oversample > 1:
             oversampled_catalog = []
             filter = event_metadata["magnitude"] >= oversample_mag
@@ -354,6 +344,7 @@ class multiple_station_dataset(Dataset):
         self.input_type = input_type
         self.label = label_key
         self.labels = labels
+        self.physical_feature = physical_feature
         self.ok_events_index = ok_events_index
         self.ok_event_id = ok_event_id
         if weight_label:
@@ -397,12 +388,12 @@ class multiple_station_dataset(Dataset):
 
                 waveform_concat = np.append(waveform, waveform_lowfreq, axis=1)
 
-                Pd = f["data"][str(eventID[0])]["Peak_dis"][eventID[1]][
+                physical_feature = f["data"][str(eventID[0])][f"{self.physical_feature}"][eventID[1]][
                     : (self.data_length_sec * self.sampling_rate), :
                 ]
 
                 # print(waveform_concat.shape)
-                waveform_concat = np.append(waveform_concat, Pd, axis=1)
+                waveform_concat = np.append(waveform_concat, physical_feature, axis=1)
                 # print(waveform_concat.shape)
 
                 # waveform_concat = waveform

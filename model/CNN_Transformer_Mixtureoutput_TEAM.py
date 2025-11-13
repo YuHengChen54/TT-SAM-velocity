@@ -122,10 +122,10 @@ class CNN(nn.Module):  # input_shape -> BatchSize, Channels, Height, Width
         output_1_6 = output[:, :, :, :6]  # 取前 6 個 channel
         output_7 = output[:, :, :, 6:]  # 取第 7 個 channel
 
-        output_1_6 = self.conv2d1(output_1_6)  # Shape: [batch, 8, height, new_width]
+        output_1_6 = self.conv2d1(output_1_6)  # Shape: [batch, 8, height, channels]
 
         # 讓 output_7 擴展到 8 個通道，匹配 output_1_6
-        output_7 = output_7.repeat(1, 8, 1, 1)  # Shape: [batch, 8, height, width]
+        output_7 = output_7.repeat(1, 8, 1, 1)  # Shape: [batch, 8, height, channel]
 
         # 在通道維度上拼接
         output = torch.cat(
