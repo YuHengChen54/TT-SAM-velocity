@@ -16,6 +16,7 @@ import os
 from scipy.stats import norm
 import bisect
 import pandas as pd
+from matplotlib.patches import Rectangle
 import matplotlib.patheffects as path_effects
 import math
 
@@ -41,16 +42,25 @@ class Precision_Recall_Factory:
                 return intensity[i]
         return intensity[-1]
 
+    def calculate_precision_recall_f1(y_true, y_pred):
+        from sklearn.metrics import precision_score, recall_score, f1_score
+        precision = precision_score(y_true, y_pred, zero_division=0)
+        recall = recall_score(y_true, y_pred, zero_division=0)
+        f1 = f1_score(y_true, y_pred, zero_division=0)
+        return precision, recall, f1
+    
     def plot_intensity_confusion_matrix(
         intensity_confusion_matrix,
-        intensity_score=None,
+        label,
+        strict_score=None,
+        loose_score=None, 
         mask_after_sec=None,
         title=None,
         output_path=None,
     ):
         intensity = ["0", "1", "2", "3", "4", "5-", "5+", "6-", "6+", "7"]
         sn.set(rc={"figure.figsize": (8, 8)}, font_scale=1.2)  # for label size
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(dpi=350)
         sn.heatmap(
             intensity_confusion_matrix,
             ax=ax,
@@ -62,22 +72,24 @@ class Precision_Recall_Factory:
             cmap="Reds",
             cbar=True,
             cbar_kws={"label": "number of traces"},
+            square=True
         )  # font size
+        ax.invert_yaxis()
         for i in range(len(intensity)):
             ax.add_patch(
                 plt.Rectangle((i, i), 1, 1, fill=False, edgecolor="gray", lw=2)
             )
-        ax.set_xlabel("Predicted intensity", fontsize=18)
-        ax.set_ylabel("Actual intensity", fontsize=18)
-        if intensity_score:
+        ax.set_xlabel("True intensity", fontsize=18)
+        ax.set_ylabel("Predicted intensity", fontsize=18)
+        if strict_score or loose_score:
             ax.set_title(
-                f"{mask_after_sec} sec intensity confusion matrix, intensity score: {np.round(intensity_score,3)}"
+                f"{mask_after_sec} sec intensity confusion matrix\nintensity score: {np.round(strict_score,3)}, loose correct score: {np.round(loose_score,3)}"
             )
         if title:
             ax.set_title(title)
         if output_path:
             fig.savefig(
-                f"{output_path}/{mask_after_sec} sec intensity confusion matrix.png",
+                f"{output_path}/{label}_{mask_after_sec} sec intensity confusion matrix.png",
                 dpi=300,
             )
         return fig, ax
@@ -86,24 +98,83 @@ class Precision_Recall_Factory:
         performance_score,
         fig,
         ax,
+        label,
         score_type,
         score_curve_threshold,
         mask_after_sec,
         output_path=None,
     ):
-        ax.plot(
-            100 * (10**score_curve_threshold),
-            performance_score[f"{score_type}"],
-            label=f"{mask_after_sec} sec",
-        )
-        ax.set_xlabel(r"PGA threshold (${cm/s^2}$)", fontsize=15)
-        ax.set_ylabel("score", fontsize=15)
-        ax.set_title(f"{score_type} curve", fontsize=22)
-        ax.set_ylim(0, 1.1)
-        ax.legend()
-        if output_path:
-            fig.savefig(f"{output_path}/{score_type}_curve.png", dpi=300)
+        if score_type == "comprehensive":
+            sn.set_theme(style="white")
+
+            x_vals = 100 * (10**score_curve_threshold)  # PGV in cm/s
+            precision_vals = performance_score["precision"]
+            recall_vals = performance_score["recall"]
+            F1_vals = performance_score["F1"]
+
+            ax.plot(x_vals, precision_vals, linewidth=4, label="Precision")
+            ax.plot(x_vals, recall_vals, linewidth=4, label="Recall")
+            ax.plot(x_vals, F1_vals, linewidth=4, label="F1")
+
+            # 標準圖表設定
+            ax.set_xlabel(r"PGV threshold (${cm/s}$)", fontsize=20)
+            ax.set_ylabel("score", fontsize=20)
+            ax.set_title("Comprehensive curve", fontsize=22, pad=30)
+            ax.set_ylim(0, 1.1)
+            ax.set_xlim(0, x_vals.max())
+            ax.legend()
+
+            # ➤ 畫上虛線（選擇保留）
+            if label == "pgv":
+                x_III = 100 * 0.019
+                x_IV = 100 * 0.057
+            elif label == "pga":
+                x_III = 100 * 0.08
+                x_IV = 100 * 0.25
+            for mark_x, intensity_label in zip([x_III, x_IV], ["III", "IV"]):
+                ax.axvline(x=mark_x, linestyle="dotted", color="grey", linewidth=1)
+                ax.text(mark_x, 1.1, intensity_label, ha="center", va="bottom", fontsize=15, zorder=5)
+
+            if output_path:
+                fig.savefig(f"{output_path}/{score_type}_curve.png", dpi=300)
+
+        else:
+            sn.set_theme(style="white")
+
+            x_vals = 100 * (10**score_curve_threshold)  # PGV in cm/s
+            y_vals = performance_score[f"{score_type}"]
+
+            # 找 III 和 IV 的 index 和 y 值
+            if label == "pgv":
+                x_III = 100 * 0.019
+                x_IV = 100 * 0.057
+            elif label == "pga":
+                x_III = 100 * 0.08
+                x_IV = 100 * 0.25
+            score_III = np.interp(x_III, x_vals, y_vals)
+            score_IV = np.interp(x_IV, x_vals, y_vals)
+
+            print(f"{mask_after_sec} sec: {score_type}(III: {score_III:.3f}, IV: {score_IV:.3f})")
+            ax.plot(x_vals, y_vals, linewidth=4,  label=f"{mask_after_sec} sec")
+
+            # 標準圖表設定
+            ax.set_xlabel(r"PGV threshold (${cm/s}$)", fontsize=20)
+            ax.set_ylabel("score", fontsize=20)
+            ax.set_title(f"{score_type} curve", fontsize=22, pad=30)
+            ax.set_ylim(0, 1.1)
+            ax.set_xlim(0, x_vals.max())
+            # ax.legend(loc="lower left")
+
+            # ➤ 畫上虛線（選擇保留）
+            for mark_x, intensity_label in zip([x_III, x_IV], ["III", "IV"]):
+                ax.axvline(x=mark_x, linestyle="dotted", color="grey", linewidth=1)
+                ax.text(mark_x, 1.1, intensity_label, ha="center", va="bottom", fontsize=15, zorder=5)
+
+            if output_path:
+                fig.savefig(f"{output_path}/{label}_prediction_{score_type}_curve.png", dpi=300)
+
         return fig, ax
+
 
 
 class TaiwanIntensity:
@@ -324,34 +395,21 @@ class Intensity_Plotter:
     def plot_true_predicted(
         y_true,
         y_pred,
-        agg="mean",
-        quantile=True,
-        ms=None,
+        agg="point",
         ax=None,
         axis_fontsize=20,
         point_size=2,
-        target="pga",
+        target="pgv",
         title=None,
     ):
-        if ax is None:
-            fig = plt.figure(figsize=(10, 10))
-            ax = fig.add_subplot(111)
-        ax.set_aspect("equal")
 
-        if quantile:
-            c_quantile = np.sum(
-                y_pred[:, :, 0]
-                * (
-                    1
-                    - norm.cdf(
-                        (y_true.reshape(-1, 1) - y_pred[:, :, 1]) / y_pred[:, :, 2]
-                    )
-                ),
-                axis=-1,
-                keepdims=False,
-            )
+        if ax is None:
+            fig = plt.figure(figsize=(10, 10), dpi=400)
+            ax = fig.add_subplot(111)
         else:
-            c_quantile = None
+            fig = ax.figure
+
+        ax.set_aspect("equal")
 
         if agg == "mean":
             y_pred_point = np.sum(y_pred[:, :, 0] * y_pred[:, :, 1], axis=1)
@@ -360,57 +418,110 @@ class Intensity_Plotter:
         else:
             raise ValueError(f'Aggregation type "{agg}" unknown')
 
-        limits = (np.min(y_true) - 0.5, np.max(y_true) + 0.5)
-        ax.plot(limits, limits, "k-", zorder=1)
-        if ms is None:
-            cbar = ax.scatter(
-                y_true,
-                y_pred_point,
-                c=c_quantile,
-                cmap="coolwarm",
-                zorder=2,
-                alpha=0.3,
-                s=point_size,
-            )
-        else:
-            cbar = ax.scatter(
-                y_true, y_pred_point, s=ms, c=c_quantile, cmap="coolwarm", zorder=2
-            )
-
         intensity = TaiwanIntensity()
         if target == "pga":
             intensity_threshold = intensity.pga
+            intensity_threshold[0] = np.log10(0.008)
             ticks = intensity.pga_ticks
         elif target == "pgv":
             intensity_threshold = intensity.pgv
+            intensity_threshold[0] = np.log10(0.002) - (np.log10(0.002) + 5) / 2
             ticks = intensity.pgv_ticks
-        ax.hlines(
-            intensity_threshold[2:-1],
-            limits[0],
-            intensity_threshold[2:-1],
-            linestyles="dotted",
-        )
-        ax.vlines(
-            intensity_threshold[2:-1],
-            limits[0],
-            intensity_threshold[2:-1],
-            linestyles="dotted",
-        )
-        for i, label in zip(ticks[1:-1], intensity.label[1:-1]):
-            ax.text(i, limits[0], label, va="bottom", fontsize=axis_fontsize - 7)
 
-        ax.set_xlabel(r"True PGV log(${m/s}$)", fontsize=axis_fontsize)
-        ax.set_ylabel(r"Predicted PGV log(${m/s}$)", fontsize=axis_fontsize)
-        if title == None:
-            ax.set_title(f"Model prediction", fontsize=axis_fontsize + 5)
+        labels = intensity.label
+        
+        
+
+        limits = (intensity_threshold[0], intensity_threshold[-1])
+
+        # 繪製網格背景著色 (更淡的色)
+        for i in range(len(intensity_threshold) - 1):
+            for j in range(len(intensity_threshold) - 1):
+                x_min, x_max = intensity_threshold[i], intensity_threshold[i + 1]
+                y_min, y_max = intensity_threshold[j], intensity_threshold[j + 1]
+                rect_color = "#eaffea"  # 預設更淡的綠色
+                if abs(i - j) == 0:
+                    rect_color = "#eaffea"  # 完全正確，淡綠
+                elif abs(i - j) == 1:
+                    rect_color = "#eaffea"  # +-1級內，淡綠
+                elif j > i:
+                    rect_color = "#ffecec"  # 高估，淡紅
+                elif j < i:
+                    rect_color = "#eef7ff"  # 低估，淡藍
+
+                ax.add_patch(
+                    Rectangle(
+                        (x_min, y_min),
+                        x_max - x_min,
+                        y_max - y_min,
+                        color=rect_color,
+                        zorder=0
+                    )
+                )
+
+        # 畫資料點（固定顏色）
+        ax.scatter(
+            y_true,
+            y_pred_point,
+            c="k",
+            zorder=2,
+            alpha=0.4,
+            s=point_size
+        )
+
+        # 畫45度參考線
+        ax.plot(limits, limits, "k-", linewidth=1, zorder=3)
+
+        # 重劃虛線格線
+        for t in intensity_threshold:
+            ax.plot([t, t], limits, linestyle='dotted', color='grey', linewidth=1, zorder=4)
+            ax.plot(limits, [t, t], linestyle='dotted', color='grey', linewidth=1, zorder=4)
+
+        # 放置震度級數文字
+        # 水平震度標籤（放上方）
+        label_y_pos = limits[1] 
+        for i, label in enumerate(labels[:-1]):
+            center_x = (intensity_threshold[i] + intensity_threshold[i + 1]) / 2
+            ax.text(center_x, label_y_pos, label, ha="center", va="bottom", fontsize=axis_fontsize-5, zorder=5)
+
+        # 垂直震度標籤（放右側）
+        label_x_pos = limits[1] +0.02
+        for i, label in enumerate(labels[:-1]):
+            center_y = (intensity_threshold[i] + intensity_threshold[i + 1]) / 2
+            ax.text(label_x_pos, center_y, label, ha="left", va="center", fontsize=axis_fontsize-5, zorder=5)
+
+        # 計算R2值，放在圖的左上角
+        r2 = metrics.r2_score(y_true, y_pred_point)
+        ax.text(
+            limits[0] + 0.085,
+            limits[-1] - 0.08,
+            f"$R^2={r2:.2f}$",
+            va="top",
+            fontsize=axis_fontsize - 4,
+        )
+
+        ax.set_xlim(limits)
+        ax.set_ylim(limits)
+
+        ax.set_xticks(intensity_threshold)
+        ax.set_xticklabels([str(round(10**v, 3)) for v in intensity_threshold], fontsize=axis_fontsize - 7)
+        ax.set_yticks(intensity_threshold)
+        ax.set_yticklabels([str(round(10**v, 3)) for v in intensity_threshold], fontsize = axis_fontsize - 7)
+        ax.set_clip_on(True)
+
+
+        if title is None:
+            ax.set_title("Model prediction", fontsize=axis_fontsize + 5, pad=40)
         else:
-            ax.set_title(title, fontsize=axis_fontsize + 5)
-        ax.tick_params(axis="x", labelsize=axis_fontsize - 5)
-        ax.tick_params(axis="y", labelsize=axis_fontsize - 5)
-        # ax.set_ylim(-3.5,1.5)
-        # ax.set_xlim(-3.5,1.5)
+            ax.set_title(title, fontsize=axis_fontsize + 5, pad=40)
 
-        # return ax, cbar
+        if target == "pga":
+            ax.set_xlabel(r"True PGA (${m/s^2}$)", fontsize=axis_fontsize)
+            ax.set_ylabel(r"Predicted PGA (${m/s^2}$)", fontsize=axis_fontsize)
+        if target == "pgv":
+            ax.set_xlabel(r"True PGV (${m/s}$)", fontsize=axis_fontsize)
+            ax.set_ylabel(r"Predicted PGV (${m/s}$)", fontsize=axis_fontsize)
+
         return fig, ax
 
     def plot_CWA_EEW_intensity_map(
@@ -691,7 +802,7 @@ class Warning_Time_Plotter:
 
         title = f"{sec} second warning performance, warning threshold: {intensity}"
         src_crs = ccrs.PlateCarree()
-        fig, ax_map = plt.subplots(subplot_kw={"projection": src_crs}, figsize=(7, 7))
+        fig, ax_map = plt.subplots(subplot_kw={"projection": src_crs}, figsize=(7, 7), dpi=450)
 
         ax_map.coastlines("10m")
 
@@ -712,6 +823,9 @@ class Warning_Time_Plotter:
         warning_time = trace_info[true_warn_filter][
             f"{label_type}_time_window"
         ] / 200 - (sec + 5)
+
+        # cvals = [-1, 0, 40, 50]
+        # colors = ["purple", "white", "red", "red"]
 
         cvals = [0, warning_time.mean(), warning_time.max()]
         colors = ["white", "orange", "red"]
@@ -785,6 +899,8 @@ class Warning_Time_Plotter:
         geoms.append(sgeom.Polygon(cp))
 
         travel_time = (P_radius / 1000) / Pwave_vel
+        first_P_time = travel_time - sec
+        print(f"First P wave arrival time: {first_P_time}")
         S_radius = Swave_vel * travel_time * 1000
         cp = gd.circle(lon=event_lon, lat=event_lat, radius=S_radius)
         geoms.append(sgeom.Polygon(cp))

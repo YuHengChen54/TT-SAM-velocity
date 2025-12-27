@@ -227,7 +227,7 @@ def train_process(
 
 if __name__ == "__main__":
     train_data_size = 0.8
-    model_index = 0
+    model_index = 38
     num_epochs = 300
     # batch_size=16
     physical_feature_list = [
@@ -306,5 +306,5 @@ if __name__ == "__main__":
                         optimizer,
                         hyper_param,
                         experiment_name="Validate physical features",
-                        run_name=f"Feature: {physical_feature} {model_index}model train",
+                        run_name=f"Make up poorly train models: {physical_feature} {model_index}model train",
                     )

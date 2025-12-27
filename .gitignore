@@ -1,11 +1,13 @@
 data/test.txt
 data/TSMIP_1999_2019_Vs30_integral.hdf5
 data/TSMIP_1999_2019_Vs30.hdf5
-predict
-modelloss
+predict/
+predict_features_validation/
+modelloss/
 
 
 model/*
+model_features_validation/*
 !model/*.py
 
 model_train_predict/mlruns
@@ -25,5 +27,5 @@ data/*
 
 
 #mlflow
-/mlruns
-
+mlruns/*
+mlartifacts/*

@@ -423,8 +423,8 @@ class multiple_station_dataset(Dataset):
                 station_location = f["data"][str(eventID[0])]["station_location"][
                     eventID[1]
                 ]
-                Vs30 = f["data"][str(eventID[0])]["Vs30"][eventID[1]]
-                station_location = np.append(station_location, Vs30)
+                # Vs30 = f["data"][str(eventID[0])]["Vs30"][eventID[1]]
+                # station_location = np.append(station_location, Vs30)
                 label = np.array(
                     f["data"][str(eventID[0])][f"{self.label}"][eventID[1]]
                 ).reshape(1, 1)

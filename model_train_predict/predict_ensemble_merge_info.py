@@ -8,6 +8,7 @@ import torch
 import sklearn.metrics as metrics
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import os
 import sys
 sys.path.append("..")
 from model.CNN_Transformer_Mixtureoutput_TEAM import (
@@ -21,23 +22,34 @@ from model.CNN_Transformer_Mixtureoutput_TEAM import (
 from data.multiple_sta_dataset import multiple_station_dataset
 from model_performance_analysis.analysis import Intensity_Plotter
 
+model_nums = [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41]
+physical_features = ["pv", "pv", "pv", 
+                    # "pa", "pa", "pa", 
+                    # "pd", "pd", "pd", 
+                    # "cvaa", "cvaa", "cvaa", 
+                    "cvav", "cvav", "cvav", 
+                    # "cvad", "cvad", "cvad", 
+                    "CAV", "CAV", 
+                    # "Ia", "Ia", "Ia", 
+                    # "IV2", "IV2", "IV2", 
+                    "TP", "TP", "TP"]
 for mask_sec in [3, 5, 7, 10, 13, 15]:
     mask_after_sec = mask_sec
     label = "pgv"
-    data = multiple_station_dataset(
-        "../data/TSMIP_1999_2019_Vs30_integral.hdf5",
-        mode="test",
-        mask_waveform_sec=mask_after_sec,
-        test_year=2016,
-        label_key=label,
-        mag_threshold=0,
-        input_type="vel",
-        data_length_sec=20,
-    )
-    # ===========predict==============
     device = torch.device("cuda")
-    for num in [31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]:
-        path = f"../model/model{num}_vel.pt"
+    for num, physical_feature in zip(model_nums, physical_features):
+        data = multiple_station_dataset(
+            "../data/TSMIP_1999_2019_Vs30_integral.hdf5",
+            mode="test",
+            mask_waveform_sec=mask_after_sec,
+            test_year=2016,
+            label_key=label,
+            physical_feature=physical_feature, 
+            mag_threshold=0,
+            input_type="vel",
+            data_length_sec=20,
+        )
+        path = f"../model_features_validation/model{num}_vel.pt"
         # path = "../model/model19_checkpoints/epoch70_model.pt"
         emb_dim = 150
         mlp_dims = (150, 100, 50, 30, 10)
@@ -115,11 +127,11 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
         }
         output_df = pd.DataFrame(output)
         output_df = output_df[output_df["answer"] != 0]
-        # output_df.to_csv(
-        #     f"../predict/model_{num}_analysis/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
-        # )
-
-        # output_df = pd.read_csv(f"../predict/model_3_analysis(velocity)/model 3 {mask_after_sec} sec prediction_vel.csv")
+        
+        os.makedirs(f"../predict_features_validation/model_{num}", exist_ok=True)
+        output_df.to_csv(
+            f"../predict_features_validation/model_{num}/model {num} {mask_after_sec} sec prediction_vel.csv", index=False
+        )
 
         fig, ax = Intensity_Plotter.plot_true_predicted(
             y_true=output_df["answer"][output_df["answer"] < np.log10(0.057)],
@@ -176,7 +188,7 @@ for mask_sec in [3, 5, 7, 10, 13, 15]:
             fontsize=20,
         )
 
-        fig.savefig(f"../predict/model {num} {mask_after_sec} sec_vel.png")
+        fig.savefig(f"../predict_features_validation/model_{num}/model_{num}_{mask_after_sec}_sec_vel.png")
 
     # # ===========merge info==============
     # num = 24
